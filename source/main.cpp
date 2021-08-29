@@ -19,7 +19,7 @@
 	ENGINE: Observer event handler
 	FEATURE: 3d level editor
 */
-#include "graphics/rendering/window.hpp"
+#include "graphics/window.hpp"
 
 int main()
 	{
