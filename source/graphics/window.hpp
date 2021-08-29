@@ -1,6 +1,7 @@
 // window.hpp
 // Wrapper around GLFW window. Initialises OpenGL context and any features wanted
 #pragma once
+#include <glm/vec3.hpp>
 
 struct GLFWwindow;
 class window
@@ -22,4 +23,7 @@ class window
 
 			void pollEvents() const;
 			bool isOpen() const;
+
+			void clear(glm::vec3 color) const;
+			void display() const;
 	};

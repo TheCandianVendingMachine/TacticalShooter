@@ -65,3 +65,14 @@ bool window::isOpen() const
 		return !glfwWindowShouldClose(m_window);
 	}
 
+void window::clear(glm::vec3 color) const
+	{
+		glClearColor(color.r, color.g, color.b, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+
+void window::display() const
+	{
+		glfwSwapBuffers(m_window);
+	}
+
