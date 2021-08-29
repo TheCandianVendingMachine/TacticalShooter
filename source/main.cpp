@@ -14,7 +14,11 @@
 	ENGINE: FMOD integration
 	ENGINE: Steam Audio
 	ENGINE: ImGui integration
-	ENGINE: Generic asset referal (unique hash per file?)
+	ENGINE: Generic asset referal (hash of file in header as UID?)
+	ENGINE: ECS
+	ENGINE: Front end UI
+	ENGINE: Resource handler
+	FEATURE: 3d level editor
 */
 
 int main()
