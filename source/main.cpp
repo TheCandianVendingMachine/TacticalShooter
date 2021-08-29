@@ -1,5 +1,3 @@
-#include <GLFW/glfw3.h>
-
 /*
 	ENGINE: OpenGL Renderer
 	ENGINE: Generic camera system
@@ -18,21 +16,19 @@
 	ENGINE: ECS
 	ENGINE: Front end UI
 	ENGINE: Resource handler
+	ENGINE: Observer event handler
 	FEATURE: 3d level editor
 */
+#include "graphics/rendering/window.hpp"
 
 int main()
 	{
-		glfwInit();
+		window app(800, 600, "Tactical Shooter Prototype");
 
-		GLFWwindow *app = glfwCreateWindow(800, 600, "Tactical Shooter Prototype", nullptr, nullptr);
-
-		while (!glfwWindowShouldClose(app))
+		while (app.isOpen())
 			{
-				glfwPollEvents();
+				app.pollEvents();
 			}
-		
-		glfwTerminate();
 
 		return 0;
 	}
