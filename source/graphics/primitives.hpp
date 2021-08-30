@@ -11,7 +11,10 @@ namespace primitive
 		template<typename T>
 		class generator
 			{
-				public:
+				private:
+					generator() = default;
+					friend class plane;
+
 					[[nodiscard]] static vertexArray generate(vertex::attributes attributes = vertex::attributes::NONE)
 						{
 							vertexArray vao;
@@ -53,5 +56,7 @@ namespace primitive
 				public:
 					plane();
 					~plane();
+
+					using generator<plane>::generate;
 			};
 	}
