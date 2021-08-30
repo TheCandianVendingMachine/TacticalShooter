@@ -28,12 +28,14 @@
 #include "graphics/primitives.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/camera.hpp"
+#include "graphics/texture.hpp"
 
 #include "random.hpp"
 #include "clock.hpp"
 #include "time.hpp"
 
 #include <spdlog/spdlog.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 int main()
@@ -49,7 +51,8 @@ int main()
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
 
-		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR);
+		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR | vertex::attributes::TEXTURE);
+		texture t("face.png", false);
 
 		shader testShader("quad.vs", "quad.fs");
 		camera cam;
@@ -137,9 +140,12 @@ int main()
 
 				glm::mat4 model(1.f);
 
+				testShader.setInt("inTexture", 0);
 				testShader.setMat4("model", model);
 				testShader.setMat4("view", cam.view());
 				testShader.setMat4("projection", cam.projection());
+
+				t.bind(GL_TEXTURE0);
 
 				app.draw(vao);
 
