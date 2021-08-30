@@ -11,19 +11,32 @@ class vertexArray
 			unsigned int m_vbo = 0;
 			unsigned int m_ebo = 0;
 
-			void generateBuffers();
+			bool m_ownBuffers = false;
+
+			unsigned int m_indexCount = 0;
+			unsigned int m_vertexCount = 0;
 
 		public:
 			const unsigned int &vao = m_vao;
 			const unsigned int &vbo = m_vbo;
 			const unsigned int &ebo = m_ebo;
 
+			const unsigned int &vertexCount = m_vertexCount;
+			const unsigned int &indexCount = m_indexCount;
+
 			vertexArray();
-			vertexArray(vertex::attributes attributes);
+			vertexArray(const vertexArray &rhs);
+			vertexArray(vertexArray &&rhs);
 			~vertexArray();
 
-			void bindVertices(const std::vector<vertex> &vertices) const;
-			void bindIndices(const std::vector<unsigned int> &indices) const;
+			vertexArray &operator=(const vertexArray &rhs);
+			vertexArray &operator=(vertexArray &&rhs);
+
+			void bindVertices(const std::vector<vertex> &vertices);
+			void bindVertices(unsigned int vbo, unsigned int vertexCount);
+
+			void bindIndices(const std::vector<unsigned int> &indices);
+			void bindIndices(unsigned int ebo, unsigned int indexCount);
 
 			void use(vertex::attributes attributes) const;
 

@@ -17,17 +17,37 @@
 	ENGINE: Front end UI
 	ENGINE: Resource handler
 	ENGINE: Observer event handler
+	ENGINE: Config handler: different configs for different files - globally accessable
 	FEATURE: 3d level editor
 */
 #include "graphics/window.hpp"
+#include "graphics/primitives.hpp"
+#include "graphics/shader.hpp"
+
+#include <spdlog/spdlog.h>
 
 int main()
 	{
 		window app(800, 600, "Tactical Shooter Prototype");
 
+		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
+		primitive::plane c_plane;
+
+		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR);
+
+		shader testShader("quad.vs", "quad.fs");
+
 		while (app.isOpen())
 			{
 				app.pollEvents();
+
+				app.clear({ 0.1f, 0.1f, 0.1f });
+
+				testShader.use();
+
+				app.draw(vao);
+
+				app.display();
 			}
 
 		return 0;

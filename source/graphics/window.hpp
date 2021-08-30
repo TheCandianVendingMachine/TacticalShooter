@@ -4,6 +4,7 @@
 #include <glm/vec3.hpp>
 
 struct GLFWwindow;
+class vertexArray;
 class window
 	{
 		private:
@@ -25,5 +26,6 @@ class window
 			bool isOpen() const;
 
 			void clear(glm::vec3 color) const;
+			void draw(const vertexArray &vao) const;
 			void display() const;
 	};
