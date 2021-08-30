@@ -30,6 +30,8 @@
 #include "graphics/camera.hpp"
 
 #include "random.hpp"
+#include "clock.hpp"
+#include "time.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -48,9 +50,28 @@ int main()
 
 		shader testShader("quad.vs", "quad.fs");
 
+		fe::clock runClock;
+		constexpr fe::time simulationRate = fe::seconds(1.f / 60.f);
+		fe::time lastTime = runClock.getTime();
+		fe::time accumulator = 0.0;
+
 		while (app.isOpen())
 			{
+				fe::time currentTime = runClock.getTime();
+				fe::time deltaTime = currentTime - lastTime;
+				if (deltaTime >= fe::seconds(3))
+					{
+						deltaTime = fe::seconds(3);
+					}
+				lastTime = currentTime;
+				accumulator += deltaTime;
+
 				app.pollEvents();
+
+				while (accumulator >= simulationRate)
+					{
+						accumulator -= simulationRate;
+					}
 
 				app.clear({ 0.1f, 0.1f, 0.1f });
 
