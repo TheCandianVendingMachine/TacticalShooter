@@ -1,9 +1,13 @@
 /*
 	ENGINE: OpenGL Renderer
-	ENGINE: Generic camera system
 	ENGINE: Forward rendering
+	ENGINE: Pointlight
+	ENGINE: Spotlight
+	ENGINE: Directional Light
+	ENGINE: Shadows
+	ENGINE: Abstracted framebuffers
+	ENGINE: Texture mapping
 	ENGINE: Deferred rendering
-	ENGINE: Abstract out OpenGL shit
 	ENGINE: Font rendering
 	ENGINE: PBR
 	ENGINE: Multiplayer
