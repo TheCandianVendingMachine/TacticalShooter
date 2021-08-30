@@ -19,15 +19,26 @@
 	ENGINE: Observer event handler
 	ENGINE: Config handler: different configs for different files - globally accessable
 	FEATURE: 3d level editor
+
+	TODO: 3d rendering
+		- perspective matrices
+		- abstracted
 */
 #include "graphics/window.hpp"
 #include "graphics/primitives.hpp"
 #include "graphics/shader.hpp"
+#include "graphics/camera.hpp"
+
+#include "random.hpp"
 
 #include <spdlog/spdlog.h>
 
 int main()
 	{
+		fe::randomImpl c_generator;
+		c_generator.startUp();
+		c_generator.seed(1337);
+
 		window app(800, 600, "Tactical Shooter Prototype");
 
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
