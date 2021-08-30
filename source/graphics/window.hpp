@@ -22,6 +22,8 @@ class window
 			window(int width, int height, const char *title);
 			~window();
 
+			GLFWwindow *getWindow() const;
+
 			void pollEvents() const;
 			bool isOpen() const;
 

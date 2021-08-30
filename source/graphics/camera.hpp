@@ -26,6 +26,6 @@ class camera
 			glm::mat4 view() const;
 			glm::mat4 projection() const;
 
-			void setPitchYaw(float pitch, float yaw);
+			void setPitchYaw(float pitchDegrees, float yawDegrees);
 
 	};

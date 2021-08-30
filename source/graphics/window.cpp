@@ -148,6 +148,11 @@ window::~window()
 		glfwTerminate();
 	}
 
+GLFWwindow *window::getWindow() const
+	{
+		return m_window;
+	}
+
 void window::pollEvents() const
 	{
 		glfwPollEvents();
