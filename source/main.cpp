@@ -3,7 +3,6 @@
 	ENGINE: Forward rendering
 	ENGINE: Pointlight
 	ENGINE: Spotlight
-	ENGINE: Directional Light
 	ENGINE: Shadows
 	ENGINE: Abstracted framebuffers
 	ENGINE: Deferred rendering
@@ -28,15 +27,18 @@
 #include "graphics/shader.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/texture.hpp"
-#include "str.hpp"
+#include "graphics/light/directionalLight.hpp"
 
 #include "random.hpp"
 #include "clock.hpp"
 #include "time.hpp"
+#include "str.hpp"
 
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include <glm/gtc/matrix_transform.hpp>
 
 int main()
 	{
@@ -51,10 +53,18 @@ int main()
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
 
-		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR | vertex::attributes::TEXTURE);
-		texture t("face.png", false);
+		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+		texture diffuse("face.png", true);
+		texture specular("face_specular.png", true);
 
-		shader testShader("quad.vs", "quad.fs");
+		directionalLight testLight;
+		testLight.direction = glm::normalize(glm::vec3(0.f, 1.f, 1.f));
+		testLight.info.ambient = glm::vec3(0.1f);
+
+		testLight.info.diffuse = { 1.f, 0.f, 0.f };
+		testLight.info.specular = { 0.2f, 0.2f, 0.2f };
+
+		shader testShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs");
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
 
@@ -143,13 +153,35 @@ int main()
 				testShader.use();
 
 				glm::mat4 model(1.f);
+				//model = glm::rotate(model, glm::radians(45.f), glm::vec3(0.f, 0.f, 0.f));
 
-				testShader.setInt("inTexture", 0);
+				glm::mat4 lightSpaceMatrix(1.f); // not used yet
+				testShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+				testShader.setInt("material.diffuse", 0);
+				testShader.setInt("material.specular", 1);
+				testShader.setFloat("material.shininess", 128.f);
+
 				testShader.setMat4("model", model);
 				testShader.setMat4("view", cam.view());
 				testShader.setMat4("projection", cam.projection());
 
-				t.bind(GL_TEXTURE0);
+				testShader.setVec3("ViewPos", cam.position);
+				testShader.setFloat("gamma", 2.2);
+
+				testShader.setVec3("light.direction", testLight.direction);
+
+				testShader.setVec3("light.ambient", testLight.info.ambient);
+				testShader.setVec3("light.diffuse", testLight.info.diffuse);
+				testShader.setVec3("light.specular", testLight.info.specular);
+
+				testShader.setFloat("light.constant", testLight.info.constant);
+				testShader.setFloat("light.linear", testLight.info.linear);
+				testShader.setFloat("light.quadratic", testLight.info.quadratic);
+
+
+				diffuse.bind(GL_TEXTURE0);
+				specular.bind(GL_TEXTURE1);
 
 				app.draw(vao);
 
