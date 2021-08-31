@@ -28,6 +28,7 @@
 #include "graphics/camera.hpp"
 #include "graphics/texture.hpp"
 #include "graphics/light/directionalLight.hpp"
+#include "graphics/light/pointLight.hpp"
 
 #include "random.hpp"
 #include "clock.hpp"
@@ -52,19 +53,24 @@ int main()
 
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
+		primitive::sphere c_sphere;
 
 		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
 		texture diffuse("face.png", true);
 		texture specular("face_specular.png", true);
 
-		directionalLight testLight;
-		testLight.direction = glm::normalize(glm::vec3(0.f, 1.f, 1.f));
+		vertexArray sphere = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+
+		pointLight testLight;
+		//testLight.direction = glm::normalize(glm::vec3(0.f, 1.f, 1.f));
+		testLight.position = glm::vec3(0.f, 4.f, 2.f);
 		testLight.info.ambient = glm::vec3(0.1f);
 
 		testLight.info.diffuse = { 1.f, 0.f, 0.f };
 		testLight.info.specular = { 0.2f, 0.2f, 0.2f };
 
 		shader testShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs");
+		//shader testShader("shaders/basic3d.vs", "shaders/basic3d.fs");
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
 
@@ -169,8 +175,8 @@ int main()
 				testShader.setVec3("ViewPos", cam.position);
 				testShader.setFloat("gamma", 2.2);
 
-				testShader.setVec3("lightInfo.direction", testLight.direction);
-				//testShader.setVec3("lightInfo.position", testLight.position);
+				//testShader.setVec3("lightInfo.direction", testLight.direction);
+				testShader.setVec3("lightInfo.position", testLight.position);
 				testShader.setInt("light.type", 0);
 
 				testShader.setVec3("light.ambient", testLight.info.ambient);
@@ -186,6 +192,11 @@ int main()
 				specular.bind(GL_TEXTURE1);
 
 				app.draw(vao);
+
+				model = glm::translate(model, testLight.position);
+				model = glm::scale(model, glm::vec3(0.2f));
+				testShader.setMat4("model", model);
+				app.draw(sphere);
 
 				app.display();
 
