@@ -1,8 +1,6 @@
 /*
 	ENGINE: OpenGL Renderer
 	ENGINE: Forward rendering
-	ENGINE: Pointlight
-	ENGINE: Spotlight
 	ENGINE: Shadows
 	ENGINE: Abstracted framebuffers
 	ENGINE: Deferred rendering
@@ -62,11 +60,11 @@ int main()
 
 		vertexArray sphere = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
 
-		spotLight testLight;
-		testLight.cutoffAngleCos = glm::cos(glm::radians(2.5f));
-		testLight.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
-		testLight.direction = glm::normalize(glm::vec3(0.f, 1.f, 1.f));
-		testLight.position = glm::vec3(0.f, 4.f, 2.f);
+		directionalLight testLight;
+		//testLight.cutoffAngleCos = glm::cos(glm::radians(2.5f));
+		//testLight.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
+		testLight.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
+		//testLight.position = glm::vec3(0.f, 4.f, 2.f);
 		testLight.info.ambient = glm::vec3(0.001f);
 
 		testLight.info.diffuse = { 1.f, 0.f, 0.f };
@@ -157,8 +155,8 @@ int main()
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
 
-				testLight.position = cam.position;
-				testLight.direction = cam.direction;
+				//testLight.position = cam.position;
+				//testLight.direction = cam.direction;
 
 				app.clear({ 0.1f, 0.1f, 0.1f });
 
@@ -182,10 +180,10 @@ int main()
 				testShader.setFloat("gamma", 2.2);
 
 				testShader.setVec3("lightInfo.direction", testLight.direction);
-				testShader.setVec3("lightInfo.position", testLight.position);
-				testShader.setFloat("lightInfo.cutoff", testLight.cutoffAngleCos);
-				testShader.setFloat("lightInfo.cutoffOuter", testLight.outerCutoffAngleCos);
-				testShader.setInt("lightInfo.type", 2);
+				//testShader.setVec3("lightInfo.position", testLight.position);
+				//testShader.setFloat("lightInfo.cutoff", testLight.cutoffAngleCos);
+				//testShader.setFloat("lightInfo.cutoffOuter", testLight.outerCutoffAngleCos);
+				testShader.setInt("lightInfo.type", 0);
 
 				testShader.setVec3("light.ambient", testLight.info.ambient);
 				testShader.setVec3("light.diffuse", testLight.info.diffuse);

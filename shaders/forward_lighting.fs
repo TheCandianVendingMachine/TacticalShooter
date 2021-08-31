@@ -23,6 +23,8 @@ struct LightInfo
     {
         vec3 position;
         vec3 direction;
+        float cutoff;
+        float cutoffOuter;
         int type;
     };
 
@@ -43,19 +45,12 @@ uniform float gamma;
 
 vec3 getLightDirection()
     {
-        if (lightInfo.type == 0)
-            {
-                return lightInfo.direction;
-            }
-        else if (lightInfo.type == 1)
-            {
-                return lightInfo.position - FragPos;
-            }
-        else if (lightInfo.type == 2)
-            {
-                // todo
-            }
-        return lightInfo.direction;
+        vec3 directions[3];
+        directions[0] = normalize(-lightInfo.direction);
+        directions[1] = normalize(lightInfo.position - FragPos);
+        directions[2] = normalize(lightInfo.position - FragPos);
+
+        return directions[lightInfo.type];
     }
 
 vec3 lightingCalculation(float shadow) 
@@ -73,11 +68,21 @@ vec3 lightingCalculation(float shadow)
         vec3 diffuse =  light.diffuse * diff * vec3(texture(material.diffuse, TextureCoords));
         vec3 specular = light.specular * specularScalar * vec3(texture(material.specular, TextureCoords));
 
+        float intensities[3];
+        intensities[0] = 1.f;
+        intensities[1] = 1.f;
+
+        float theta = dot(lightDir, normalize(-lightInfo.direction));
+        float epsilon = lightInfo.cutoff - lightInfo.cutoffOuter;
+        intensities[2] = clamp((theta - lightInfo.cutoffOuter) / epsilon, 0, 1);
+
+        float intensity = intensities[lightInfo.type];
+
         /*float distance = length(light.position - FragPos);
         float attenuation = 1 / pow(light.constant + light.linear * distance + light.quadratic * distance * distance, 2);
         attenuation = 1;*/
 
-        vec3 finalColour = (ambient + (1 - shadow) * (diffuse + specular));
+        vec3 finalColour = (ambient + intensity * (1 - shadow) * (diffuse + specular));
 
         return finalColour;
     }
