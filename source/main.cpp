@@ -29,6 +29,7 @@
 #include "graphics/texture.hpp"
 #include "graphics/light/directionalLight.hpp"
 #include "graphics/light/pointLight.hpp"
+#include "graphics/light/spotLight.hpp"
 
 #include "random.hpp"
 #include "clock.hpp"
@@ -61,10 +62,11 @@ int main()
 
 		vertexArray sphere = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
 
-		pointLight testLight;
-		//testLight.direction = glm::normalize(glm::vec3(0.f, 1.f, 1.f));
+		spotLight testLight;
+		testLight.cutoffAngleCos = glm::cos(glm::radians(12.5f));
+		testLight.direction = glm::normalize(glm::vec3(0.f, 1.f, 1.f));
 		testLight.position = glm::vec3(0.f, 4.f, 2.f);
-		testLight.info.ambient = glm::vec3(0.1f);
+		testLight.info.ambient = glm::vec3(0.001f);
 
 		testLight.info.diffuse = { 1.f, 0.f, 0.f };
 		testLight.info.specular = { 0.2f, 0.2f, 0.2f };
@@ -154,6 +156,9 @@ int main()
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
 
+				testLight.position = cam.position;
+				testLight.direction = cam.direction;
+
 				app.clear({ 0.1f, 0.1f, 0.1f });
 
 				testShader.use();
@@ -175,9 +180,10 @@ int main()
 				testShader.setVec3("ViewPos", cam.position);
 				testShader.setFloat("gamma", 2.2);
 
-				//testShader.setVec3("lightInfo.direction", testLight.direction);
+				testShader.setVec3("lightInfo.direction", testLight.direction);
 				testShader.setVec3("lightInfo.position", testLight.position);
-				testShader.setInt("light.type", 0);
+				testShader.setFloat("lightInfo.cutoff", testLight.cutoffAngleCos);
+				testShader.setInt("lightInfo.type", 2);
 
 				testShader.setVec3("light.ambient", testLight.info.ambient);
 				testShader.setVec3("light.diffuse", testLight.info.diffuse);
@@ -193,10 +199,10 @@ int main()
 
 				app.draw(vao);
 
-				model = glm::translate(model, testLight.position);
+				/*model = glm::translate(model, testLight.position);
 				model = glm::scale(model, glm::vec3(0.2f));
 				testShader.setMat4("model", model);
-				app.draw(sphere);
+				app.draw(sphere);*/
 
 				app.display();
 
