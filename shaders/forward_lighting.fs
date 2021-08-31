@@ -10,8 +10,6 @@ struct Material
 
 struct Light 
     {
-        vec3 direction;
-
         vec3 ambient;
         vec3 diffuse;
         vec3 specular;
@@ -19,6 +17,13 @@ struct Light
         float constant;
         float linear;
         float quadratic;
+    };
+
+struct LightInfo
+    {
+        vec3 position;
+        vec3 direction;
+        int type;
     };
 
 uniform sampler2D inTexture;
@@ -29,16 +34,35 @@ in vec4 FragPosLightSpace;
 in vec2 TextureCoords;
 
 uniform Material material;
+
 uniform Light light;
+uniform LightInfo lightInfo;
 
 uniform vec3 ViewPos;
 uniform float gamma;
+
+vec3 getLightDirection()
+    {
+        if (lightInfo.type == 0)
+            {
+                return lightInfo.direction;
+            }
+        else if (lightInfo.type == 1)
+            {
+                return lightInfo.position - FragPos;
+            }
+        else if (lightInfo.type == 2)
+            {
+                // todo
+            }
+        return lightInfo.direction;
+    }
 
 vec3 lightingCalculation(float shadow) 
     {
         vec3 normal = normalize(VertexNormal);
 
-        vec3 lightDir = light.direction;
+        vec3 lightDir = getLightDirection();
         vec3 viewDir = normalize(ViewPos - FragPos);
         vec3 halfwayDir = normalize(lightDir + viewDir);
 

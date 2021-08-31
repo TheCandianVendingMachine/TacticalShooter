@@ -169,7 +169,9 @@ int main()
 				testShader.setVec3("ViewPos", cam.position);
 				testShader.setFloat("gamma", 2.2);
 
-				testShader.setVec3("light.direction", testLight.direction);
+				testShader.setVec3("lightInfo.direction", testLight.direction);
+				//testShader.setVec3("lightInfo.position", testLight.position);
+				testShader.setInt("light.type", 0);
 
 				testShader.setVec3("light.ambient", testLight.info.ambient);
 				testShader.setVec3("light.diffuse", testLight.info.diffuse);
