@@ -2,10 +2,11 @@
 // Wrapper around GLFW window. Initialises OpenGL context and any features wanted
 #pragma once
 #include <glm/vec3.hpp>
+#include "messaging/eventSource.hpp"
 
 struct GLFWwindow;
 class vertexArray;
-class window
+class window : public eventSource
 	{
 		private:
 			GLFWwindow *m_window = nullptr;

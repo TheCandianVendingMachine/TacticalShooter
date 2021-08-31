@@ -1,5 +1,6 @@
 #include "window.hpp"
 #include "vertexArray.hpp"
+#include "str.hpp"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
@@ -96,14 +97,22 @@ void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 void windowResizeCallback(GLFWwindow *app, int width, int height)
 	{
 		window &userWindow = *static_cast<window*>(glfwGetWindowUserPointer(app));
+
+		int oldWidth = userWindow.m_width;
+		int oldHeight = userWindow.m_height;
+
 		userWindow.m_width = width;
 		userWindow.m_height = height;
+
+		userWindow.signal(message(FE_STR("windowResize"), width, height, oldWidth, oldHeight));
 	}
 
 void framebufferResizeCallback(GLFWwindow *app, int width, int height)
 	{
 		window &userWindow = *static_cast<window*>(glfwGetWindowUserPointer(app));
 		glViewport(0, 0, width, height);
+
+		userWindow.signal(message(FE_STR("framebufferResize"), width, height));
 	}
 
 window::window(int width, int height, const char *title) :

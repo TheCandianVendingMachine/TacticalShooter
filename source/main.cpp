@@ -6,7 +6,6 @@
 	ENGINE: Directional Light
 	ENGINE: Shadows
 	ENGINE: Abstracted framebuffers
-	ENGINE: Texture mapping
 	ENGINE: Deferred rendering
 	ENGINE: Font rendering
 	ENGINE: PBR
@@ -29,6 +28,7 @@
 #include "graphics/shader.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/texture.hpp"
+#include "str.hpp"
 
 #include "random.hpp"
 #include "clock.hpp"
@@ -57,6 +57,10 @@ int main()
 		shader testShader("quad.vs", "quad.fs");
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
+
+		app.subscribe(FE_STR("framebufferResize"), [&cam] (message &m) {
+			cam.aspectRatio = static_cast<float>(m.arguments[0].variable.INT) / static_cast<float>(m.arguments[1].variable.INT);
+		});
 
 		constexpr fe::time simulationRate = fe::seconds(1.f / 60.f);
 		constexpr fe::time maxDeltaTime = fe::seconds(3);
