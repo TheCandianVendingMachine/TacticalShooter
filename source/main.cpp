@@ -28,6 +28,9 @@
 #include "graphics/light/directionalLight.hpp"
 #include "graphics/light/pointLight.hpp"
 #include "graphics/light/spotLight.hpp"
+#include "graphics/transformable.hpp"
+#include "graphics/graphicsEngine.hpp"
+#include "graphics/renderObject.hpp"
 
 #include "random.hpp"
 #include "clock.hpp"
@@ -37,8 +40,6 @@
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <glm/gtc/matrix_transform.hpp>
 
 int main()
 	{
@@ -50,28 +51,28 @@ int main()
 		glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		glfwSetInputMode(app.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+		graphicsEngine graphicsEngine;
+
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
 		primitive::sphere c_sphere;
 
-		vertexArray vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
 		texture diffuse("face.png", true);
 		texture specular("face_specular.png", true);
 
-		vertexArray sphere = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+		renderObject sphere;
+		sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+		sphere.diffuse = diffuse;
+		sphere.specular = specular;
 
-		directionalLight testLight;
-		//testLight.cutoffAngleCos = glm::cos(glm::radians(2.5f));
-		//testLight.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
-		testLight.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
-		//testLight.position = glm::vec3(0.f, 4.f, 2.f);
-		testLight.info.ambient = glm::vec3(0.001f);
+		renderObject plane;
+		plane.vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+		plane.diffuse = diffuse;
+		plane.specular = specular;
 
-		testLight.info.diffuse = { 1.f, 0.f, 0.f };
-		testLight.info.specular = { 0.2f, 0.2f, 0.2f };
+		graphicsEngine.render(sphere);
+		graphicsEngine.render(plane);
 
-		shader testShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs");
-		//shader testShader("shaders/basic3d.vs", "shaders/basic3d.fs");
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
 
@@ -155,54 +156,9 @@ int main()
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
 
-				//testLight.position = cam.position;
-				//testLight.direction = cam.direction;
-
 				app.clear({ 0.1f, 0.1f, 0.1f });
 
-				testShader.use();
-
-				glm::mat4 model(1.f);
-				//model = glm::rotate(model, glm::radians(45.f), glm::vec3(0.f, 0.f, 0.f));
-
-				glm::mat4 lightSpaceMatrix(1.f); // not used yet
-				testShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
-
-				testShader.setInt("material.diffuse", 0);
-				testShader.setInt("material.specular", 1);
-				testShader.setFloat("material.shininess", 128.f);
-
-				testShader.setMat4("model", model);
-				testShader.setMat4("view", cam.view());
-				testShader.setMat4("projection", cam.projection());
-
-				testShader.setVec3("ViewPos", cam.position);
-				testShader.setFloat("gamma", 2.2);
-
-				testShader.setVec3("lightInfo.direction", testLight.direction);
-				//testShader.setVec3("lightInfo.position", testLight.position);
-				//testShader.setFloat("lightInfo.cutoff", testLight.cutoffAngleCos);
-				//testShader.setFloat("lightInfo.cutoffOuter", testLight.outerCutoffAngleCos);
-				testShader.setInt("lightInfo.type", 0);
-
-				testShader.setVec3("light.ambient", testLight.info.ambient);
-				testShader.setVec3("light.diffuse", testLight.info.diffuse);
-				testShader.setVec3("light.specular", testLight.info.specular);
-
-				testShader.setFloat("light.constant", testLight.info.constant);
-				testShader.setFloat("light.linear", testLight.info.linear);
-				testShader.setFloat("light.quadratic", testLight.info.quadratic);
-
-
-				diffuse.bind(GL_TEXTURE0);
-				specular.bind(GL_TEXTURE1);
-
-				app.draw(vao);
-
-				/*model = glm::translate(model, testLight.position);
-				model = glm::scale(model, glm::vec3(0.2f));
-				testShader.setMat4("model", model);
-				app.draw(sphere);*/
+				graphicsEngine.draw(cam);
 
 				app.display();
 

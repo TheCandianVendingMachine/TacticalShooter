@@ -11,6 +11,7 @@ glm::mat4 transformable::transform() const
 		glm::mat4 transform(1.f);
 		transform = glm::translate(transform, position);
 		transform *= glm::toMat4(orientation);
+		transform = glm::scale(transform, scale);
 
 		return transform;
 	}

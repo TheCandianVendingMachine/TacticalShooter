@@ -16,7 +16,7 @@ class shader
 			shader(const char *vertexPath, const char *fragmentPath);
 			~shader();
 
-			void use();
+			void use() const;
 
 			void setInt(const char *uniform, int value) const;
 			void setFloat(const char *uniform, float value) const;
