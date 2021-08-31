@@ -9,8 +9,6 @@ std::vector<vertex> primitive::plane::vertices = {};
 unsigned int primitive::plane::vbo = 0;
 unsigned int primitive::plane::ebo = 0;
 
-bool primitive::plane::isBound = false;
-
 void primitive::plane::bind(unsigned int vao)
 	{
 		glBindVertexArray(vao);
@@ -22,8 +20,6 @@ void primitive::plane::bind(unsigned int vao)
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
 		glBindVertexArray(0);
-
-		isBound = true;
 	}
 
 primitive::plane::plane()
@@ -64,8 +60,6 @@ std::vector<vertex> primitive::sphere::vertices = {};
 unsigned int primitive::sphere::vbo = 0;
 unsigned int primitive::sphere::ebo = 0;
 
-bool primitive::sphere::isBound = false;
-
 void primitive::sphere::bind(unsigned int vao)
 	{
 		glBindVertexArray(vao);
@@ -77,8 +71,6 @@ void primitive::sphere::bind(unsigned int vao)
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
 		glBindVertexArray(0);
-
-		isBound = true;
 	}
 
 void primitive::sphere::generateVertices() const

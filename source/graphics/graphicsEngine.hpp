@@ -7,9 +7,11 @@
 #include "light/directionalLight.hpp"
 #include "light/spotLight.hpp"
 #include "light/pointLight.hpp"
+#include "vertexArray.hpp"
 
 class shader;
 class camera;
+class window;
 class graphicsEngine
 	{
 		private:
@@ -20,10 +22,32 @@ class graphicsEngine
 
 			shader m_forwardRenderShader;
 
+			shader m_deferredRenderShader;
+			shader m_deferredLightingShader;
+
+			vertexArray m_quadVAO;
+
+			// deferred rendering
+			unsigned int m_deferredFramebuffer = 0;
+
+			unsigned int m_gDepth = 0;
+
+			unsigned int m_gPosition = 0;
+			unsigned int m_gNormal = 0;
+			unsigned int m_gColourSpecular = 0;
+
+			unsigned int m_screenWidth = 0;
+			unsigned int m_screenHeight = 0;
+
+			void createFramebuffers();
+
 		public:
 			directionalLight directionalLight;
 
-			graphicsEngine();
+			graphicsEngine(window &app);
+
+			void addLight(const spotLight &light);
+			void addLight(const pointLight &light);
 
 			void render(const renderObject &object);
 			void draw(const camera &camera) const;

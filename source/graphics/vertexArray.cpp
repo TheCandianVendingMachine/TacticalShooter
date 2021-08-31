@@ -13,11 +13,6 @@ vertexArray::vertexArray(const vertexArray &rhs)
 		*this = rhs;
 	}
 
-vertexArray::vertexArray(vertexArray &&rhs)
-	{
-		*this = std::move(rhs);
-	}
-
 vertexArray::~vertexArray()
 	{
 		/*if (m_ownBuffers)
@@ -40,23 +35,6 @@ vertexArray &vertexArray::operator=(const vertexArray &rhs)
 				m_indexCount = rhs.m_indexCount;
 
 				m_ownBuffers = rhs.m_ownBuffers;
-			}
-
-		return *this;
-	}
-
-vertexArray &vertexArray::operator=(vertexArray &&rhs)
-	{
-		if (&rhs != this)
-			{
-				m_vao = std::move(rhs.m_vao);
-				m_vbo = std::move(rhs.m_vbo);
-				m_ebo = std::move(rhs.m_ebo);
-
-				m_vertexCount = std::move(rhs.m_vertexCount);
-				m_indexCount = std::move(rhs.m_indexCount);
-
-				m_ownBuffers = std::move(rhs.m_ownBuffers);
 			}
 
 		return *this;

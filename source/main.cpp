@@ -1,6 +1,5 @@
 /*
 	ENGINE: OpenGL Renderer
-	ENGINE: Forward rendering
 	ENGINE: Shadows
 	ENGINE: Abstracted framebuffers
 	ENGINE: Deferred rendering
@@ -51,11 +50,11 @@ int main()
 		glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		glfwSetInputMode(app.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		graphicsEngine graphicsEngine;
-
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
 		primitive::sphere c_sphere;
+
+		graphicsEngine graphicsEngine(app);
 
 		texture diffuse("face.png", true);
 		texture specular("face_specular.png", true);
@@ -70,8 +69,10 @@ int main()
 		plane.diffuse = diffuse;
 		plane.specular = specular;
 
-		graphicsEngine.render(sphere);
+		sphere.transform.position = { 5.f, 0.f, 0.f };
+
 		graphicsEngine.render(plane);
+		graphicsEngine.render(sphere);
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
@@ -156,12 +157,8 @@ int main()
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
 
-				app.clear({ 0.1f, 0.1f, 0.1f });
-
 				graphicsEngine.draw(cam);
-
 				app.display();
-
 				app.pollEvents();
 			}
 

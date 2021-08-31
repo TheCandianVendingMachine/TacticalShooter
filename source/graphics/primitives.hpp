@@ -25,10 +25,7 @@ namespace primitive
 									spdlog::error("Cannot generate primitive without a bound VBO/EBO [{}/{}]", T::vbo, T::ebo);
 								}
 
-							if (!T::isBound)
-								{
-									T::bind(vao.vao);
-								}
+							T::bind(vao.vao);
 
 							vao.bindIndices(T::ebo, T::indices.size());
 							vao.bindVertices(T::vbo, T::vertices.size());
@@ -46,8 +43,6 @@ namespace primitive
 
 					static unsigned int vbo;
 					static unsigned int ebo;
-
-					static bool isBound;
 
 					static std::vector<unsigned int> indices;
 					static std::vector<vertex> vertices;
@@ -70,8 +65,6 @@ namespace primitive
 
 					static unsigned int vbo;
 					static unsigned int ebo;
-
-					static bool isBound;
 
 					static std::vector<unsigned int> indices;
 					static std::vector<vertex> vertices;
