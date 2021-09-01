@@ -144,18 +144,18 @@ void primitive::sphere::generateIndices() const
                 const int previousVertex = (i > 1) ? ((2 * i) * (i - 3) + 5) : 0;
 
                 // add first index to list since it is always the non pattern conforming
-                indices.push_back(previousVertex);
-                indices.push_back(totalVertexCount - 1);
                 indices.push_back(wrapVertex);
+                indices.push_back(totalVertexCount - 1);
+                indices.push_back(previousVertex);
 
                 // up triangles
                 int vertexCounter = 0;
                 int increment = 0;
                 for (int j = 0; j < totalVerticesToProcess - 1; j++)
                     {
-                        indices.push_back(previousVertex + increment);
-                        indices.push_back(currentVertexUp + 0);
                         indices.push_back(currentVertexUp + 1);
+                        indices.push_back(currentVertexUp + 0);
+                        indices.push_back(previousVertex + increment);
                         currentVertexUp++;
 
                         // if we are on a corner we have 2 triangles under us so generate them
@@ -163,9 +163,9 @@ void primitive::sphere::generateIndices() const
                             {
                                 if (++vertexCounter >= i)
                                     {
-                                        indices.push_back(previousVertex + increment);
-                                        indices.push_back(currentVertexUp + 0);
                                         indices.push_back(currentVertexUp + 1);
+                                        indices.push_back(currentVertexUp + 0);
+                                        indices.push_back(previousVertex + increment);
 
                                         // We are adding another vertex so we want to increment all values pertaining to the +1 vertex
                                         // vertexCounter = 1 since this is a processed vertex
@@ -228,11 +228,18 @@ primitive::sphere::sphere()
         vertices.insert(vertices.end(), mirroredVertices.begin(), mirroredVertices.end());
 
         std::vector<unsigned int> mirroredIndices(indices);
-        for (auto &index : mirroredIndices)
+        for (unsigned int i = 0; i < mirroredIndices.size(); i += 3)
             {
-                if (static_cast<int>(totalVertexCount - index) > totalVerticesForLastRow)
+                int tempIndex = mirroredIndices[i];
+                mirroredIndices[i] = mirroredIndices[i + 2];
+                mirroredIndices[i + 2] = tempIndex;
+                for (unsigned int j = 0; j < 3; j++)
                     {
-                        index += totalVertexCount;
+                        unsigned int index = mirroredIndices[i + j];
+                        if (static_cast<int>(totalVertexCount - index) > totalVerticesForLastRow)
+                            {
+                                 mirroredIndices[i + j] += totalVertexCount;
+                            }
                     }
             }
         indices.insert(indices.end(), mirroredIndices.begin(), mirroredIndices.end());
