@@ -24,6 +24,7 @@ class graphicsEngine
 
 			shader m_deferredRenderShader;
 			shader m_deferredLightingShader;
+			shader m_lightDebugShader;
 
 			vertexArray m_quadVAO;
 
@@ -41,6 +42,8 @@ class graphicsEngine
 
 			unsigned int m_screenWidth = 0;
 			unsigned int m_screenHeight = 0;
+
+			bool m_debugDrawLight = false;
 
 			void createFramebuffers();
 

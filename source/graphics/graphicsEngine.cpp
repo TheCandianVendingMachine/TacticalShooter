@@ -59,7 +59,8 @@ void graphicsEngine::createFramebuffers()
 graphicsEngine::graphicsEngine(window &app) :
 	m_forwardRenderShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs"),
 	m_deferredRenderShader("shaders/forward_lighting.vs", "shaders/deferred_rendering.fs"),
-	m_deferredLightingShader("shaders/deferred_lighting.vs", "shaders/deferred_lighting.fs")
+	m_deferredLightingShader("shaders/deferred_lighting.vs", "shaders/deferred_lighting.fs"),
+	m_lightDebugShader("shaders/basic3d.vs", "shaders/basic3d.fs")
 	{
 		m_screenWidth = app.width;
 		m_screenHeight = app.height;
@@ -100,8 +101,8 @@ graphicsEngine::graphicsEngine(window &app) :
 
 		m_quadVAO = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
 
-		m_pointLightVAO = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
-		m_directionalLightVAO = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
+		m_pointLightVAO = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR);
+		m_directionalLightVAO = primitive::plane::generate(vertex::attributes::POSITION);
 	}
 
 void graphicsEngine::addLight(const spotLight &light)
@@ -214,7 +215,7 @@ void graphicsEngine::draw(const camera &camera) const
 				m_deferredLightingShader.setFloat("light.linear", pointLight.info.linear);
 				m_deferredLightingShader.setFloat("light.quadratic", pointLight.info.quadratic);
 
-				float scale = 5.f;
+				float scale = pointLight.info.radius(camera.zFar / 2.f);
 				glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
 				model = glm::scale(model, glm::vec3(scale));
 				m_deferredLightingShader.setMat4("model", model);
@@ -224,4 +225,27 @@ void graphicsEngine::draw(const camera &camera) const
 			}
 
 		glBindVertexArray(0);
+
+		if (m_debugDrawLight) 
+			{
+				m_lightDebugShader.use();
+				m_lightDebugShader.setMat4("view", camera.view());
+				m_lightDebugShader.setMat4("projection", camera.projection());
+
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glDisable(GL_CULL_FACE);
+				for (const auto &pointLight : m_pointLights)
+				{
+					float scale = pointLight.info.radius(camera.zFar / 2.f);
+					glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
+					model = glm::scale(model, glm::vec3(scale));
+					m_lightDebugShader.setMat4("model", model);
+
+					glBindVertexArray(m_pointLightVAO.vao);
+					glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+				}
+				glBindVertexArray(0);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glEnable(GL_CULL_FACE);
+			}
 	}

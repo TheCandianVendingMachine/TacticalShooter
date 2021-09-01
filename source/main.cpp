@@ -80,10 +80,14 @@ int main()
 		//pl.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
 		pl.position = glm::vec3(0.f, 4.f, 2.f);
 		pl.info.ambient = glm::vec3(0.001f);
+		pl.info.constant = 1.f;
+		pl.info.linear = 0.07;
+		pl.info.quadratic = 0.017;
 		graphicsEngine.addLight(pl);
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
+		cam.zFar = 1000.f;
 
 		app.subscribe(FE_STR("framebufferResize"), [&cam] (message &m) {
 			cam.aspectRatio = static_cast<float>(m.arguments[0].variable.INT) / static_cast<float>(m.arguments[1].variable.INT);

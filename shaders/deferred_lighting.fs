@@ -1,7 +1,5 @@
 #version 330 core
-
 out vec4 FragColour;
-in vec2 TextureCoords;
 
 struct Light
     {
@@ -68,11 +66,10 @@ vec3 lightingCalculation(vec3 VertexNormal, vec3 FragPos, vec3 Albedo, vec3 Spec
 
         float intensity = intensities[lightInfo.type];
 
-        /*float distance = length(light.position - FragPos);
+        float distance = length(lightInfo.position - FragPos);
         float attenuation = 1 / pow(light.constant + light.linear * distance + light.quadratic * distance * distance, 2);
-        attenuation = 1;*/
 
-        vec3 finalColour = (ambient + intensity * (1 - shadow) * (diffuse + specular));
+        vec3 finalColour = (ambient + intensity * (1 - shadow) * (diffuse + specular)) * attenuation;
 
         return finalColour;
     }
