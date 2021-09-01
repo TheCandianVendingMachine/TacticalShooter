@@ -36,7 +36,7 @@ primitive::plane::plane()
 
 		glm::vec3 nm(0.f, 1.f, 0.f);
 
-		indices = { 0, 1, 2, 2, 3, 0 };
+		indices = { 2, 1, 0, 0, 3, 2 };
 		vertices = {
 			vertex{ p0, nm, { 1.f, 0.f, 0.f }, uv0, { 1.f, 1.f, 1.f } },
 			vertex{ p1, nm, { 1.f, 0.f, 0.f }, uv1, { 1.f, 1.f, 1.f } },
