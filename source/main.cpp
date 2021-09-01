@@ -74,6 +74,14 @@ int main()
 		graphicsEngine.render(plane);
 		graphicsEngine.render(sphere);
 
+		pointLight pl;
+		//pl.cutoffAngleCos = glm::cos(glm::radians(2.5f));
+		//pl.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
+		//pl.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
+		pl.position = glm::vec3(0.f, 4.f, 2.f);
+		pl.info.ambient = glm::vec3(0.001f);
+		graphicsEngine.addLight(pl);
+
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
 

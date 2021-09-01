@@ -27,6 +27,9 @@ class graphicsEngine
 
 			vertexArray m_quadVAO;
 
+			vertexArray m_pointLightVAO;
+			vertexArray m_directionalLightVAO;
+
 			// deferred rendering
 			unsigned int m_deferredFramebuffer = 0;
 

@@ -7,6 +7,7 @@
 #include "window.hpp"
 #include "str.hpp"
 #include "primitives.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
 constexpr unsigned int c_gBufferCount = 3;
@@ -98,6 +99,9 @@ graphicsEngine::graphicsEngine(window &app) :
 		});
 
 		m_quadVAO = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
+
+		m_pointLightVAO = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
+		m_directionalLightVAO = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
 	}
 
 void graphicsEngine::addLight(const spotLight &light)
@@ -117,6 +121,9 @@ void graphicsEngine::render(const renderObject &object)
 
 void graphicsEngine::draw(const camera &camera) const
 	{
+		// TODO: Implement light volumes via rendering spheres that represent light radius
+		glCullFace(GL_BACK);
+
 		m_forwardRenderShader.use();
 
 		m_forwardRenderShader.setVec3("lightInfo.direction", directionalLight.direction);
@@ -160,11 +167,11 @@ void graphicsEngine::draw(const camera &camera) const
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		m_deferredLightingShader.use();
+		m_deferredLightingShader.setVec2("FramebufferSize", glm::vec2(m_screenWidth, m_screenHeight));
 
 		m_deferredLightingShader.setInt("gPosition", 0);
 		m_deferredLightingShader.setInt("gNormal", 1);
 		m_deferredLightingShader.setInt("gColourSpecular", 2);
-
 
 		m_deferredLightingShader.setVec3("lightInfo.direction", directionalLight.direction);
 		//m_deferredLightingShader.setVec3("lightInfo.position", testLight.position);
@@ -180,6 +187,9 @@ void graphicsEngine::draw(const camera &camera) const
 		m_deferredLightingShader.setFloat("light.linear", directionalLight.info.linear);
 		m_deferredLightingShader.setFloat("light.quadratic", directionalLight.info.quadratic);
 
+		m_deferredLightingShader.setMat4("view", camera.view());
+		m_deferredLightingShader.setMat4("projection", camera.projection());
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_gPosition);
 		glActiveTexture(GL_TEXTURE1);
@@ -187,7 +197,31 @@ void graphicsEngine::draw(const camera &camera) const
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
 
-		glBindVertexArray(m_quadVAO.vao);
-		glDrawElements(GL_TRIANGLES, m_quadVAO.indexCount, GL_UNSIGNED_INT, 0);
+		glCullFace(GL_FRONT);
+		for (const auto &pointLight : m_pointLights)
+			{
+				//m_deferredLightingShader.setVec3("lightInfo.direction", pointLight.direction);
+				m_deferredLightingShader.setVec3("lightInfo.position", pointLight.position);
+				//m_deferredLightingShader.setFloat("lightInfo.cutoff", pointLight.cutoffAngleCos);
+				//m_deferredLightingShader.setFloat("lightInfo.cutoffOuter", pointLight.outerCutoffAngleCos);
+				m_deferredLightingShader.setInt("lightInfo.type", 1);
+
+				m_deferredLightingShader.setVec3("light.ambient", pointLight.info.ambient);
+				m_deferredLightingShader.setVec3("light.diffuse", pointLight.info.diffuse);
+				m_deferredLightingShader.setVec3("light.specular", pointLight.info.specular);
+
+				m_deferredLightingShader.setFloat("light.constant", pointLight.info.constant);
+				m_deferredLightingShader.setFloat("light.linear", pointLight.info.linear);
+				m_deferredLightingShader.setFloat("light.quadratic", pointLight.info.quadratic);
+
+				float scale = 5.f;
+				glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
+				model = glm::scale(model, glm::vec3(scale));
+				m_deferredLightingShader.setMat4("model", model);
+
+				glBindVertexArray(m_pointLightVAO.vao);
+				glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+			}
+
 		glBindVertexArray(0);
 	}

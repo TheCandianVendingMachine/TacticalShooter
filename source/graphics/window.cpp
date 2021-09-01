@@ -145,6 +145,7 @@ window::window(int width, int height, const char *title) :
 		glDebugMessageCallback(&openGLDebugCallback, nullptr);
 
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 		glfwSetWindowUserPointer(m_window, this);
 
 		glfwSetWindowSizeCallback(m_window, &windowResizeCallback);

@@ -1,6 +1,6 @@
 #version 330 core
-out vec4 FragColour;
 
+out vec4 FragColour;
 in vec2 TextureCoords;
 
 struct Light
@@ -31,6 +31,7 @@ uniform Light light;
 uniform LightInfo lightInfo;
 
 uniform vec3 ViewPos;
+uniform vec2 FramebufferSize;
 
 vec3 getLightDirection(vec3 FragPos)
     {
@@ -78,10 +79,12 @@ vec3 lightingCalculation(vec3 VertexNormal, vec3 FragPos, vec3 Albedo, vec3 Spec
 
 void main()
     {
-        vec3 FragPos = texture(gPosition, TextureCoords).rgb;
-        vec3 Normal = texture(gNormal, TextureCoords).rgb;
-        vec3 Albedo = texture(gColourSpecular, TextureCoords).rgb;
-        float Specular = texture(gColourSpecular, TextureCoords).a;
+        vec2 normalFragCoord = gl_FragCoord.xy / FramebufferSize;
+
+        vec3 FragPos = texture(gPosition, normalFragCoord).rgb;
+        vec3 Normal = texture(gNormal, normalFragCoord).rgb;
+        vec3 Albedo = texture(gColourSpecular, normalFragCoord).rgb;
+        float Specular = texture(gColourSpecular, normalFragCoord).a;
 
         vec3 lightColour = lightingCalculation(Normal, FragPos, Albedo, vec3(Specular), 0);
 
