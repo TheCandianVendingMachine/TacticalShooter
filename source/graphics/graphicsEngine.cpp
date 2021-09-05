@@ -14,44 +14,70 @@ constexpr unsigned int c_gBufferCount = 3;
 
 void graphicsEngine::createFramebuffers()
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
+		/* BEGIN DEFERRED RENDERING */
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
 
-		// position buffer
-		glBindTexture(GL_TEXTURE_2D, m_gPosition);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gPosition, 0);
+			// position buffer
+			glBindTexture(GL_TEXTURE_2D, m_gPosition);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gPosition, 0);
 
-		// normal buffer
-		glBindTexture(GL_TEXTURE_2D, m_gNormal);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gNormal, 0);
+			// normal buffer
+			glBindTexture(GL_TEXTURE_2D, m_gNormal);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gNormal, 0);
 
-		// colour + specular buffer
-		glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gColourSpecular, 0);
+			// colour + specular buffer
+			glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gColourSpecular, 0);
 
-		unsigned int attachments[c_gBufferCount] = {
-			GL_COLOR_ATTACHMENT0,
-			GL_COLOR_ATTACHMENT1,
-			GL_COLOR_ATTACHMENT2
-		};
-		glDrawBuffers(c_gBufferCount, attachments);
+			unsigned int attachments[c_gBufferCount] = {
+				GL_COLOR_ATTACHMENT0,
+				GL_COLOR_ATTACHMENT1,
+				GL_COLOR_ATTACHMENT2
+			};
+			glDrawBuffers(c_gBufferCount, attachments);
 
-		glBindTexture(GL_TEXTURE_2D, m_gDepth);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_gDepth, 0);
+			glBindTexture(GL_TEXTURE_2D, m_gDepth);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_gDepth, 0);
 
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			{
-				spdlog::error("[Deferred Rendering] Framebuffer is not complete");
-			}
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				{
+					spdlog::error("[Deferred Rendering] Framebuffer is not complete");
+				}
+		}
+		/* END DEFERRED RENDERING */
+		/* BEGIN POST PROCESSING*/
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
+			glBindTexture(GL_TEXTURE_2D, m_ppRenderTexture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_UNSIGNED_INT, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ppRenderTexture, 0);
+
+			unsigned int attachments[] = { GL_COLOR_ATTACHMENT0 };
+			glDrawBuffers(1, attachments);
+
+			glBindTexture(GL_TEXTURE_2D, m_ppDepth);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_ppDepth, 0);
+
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+				{
+					spdlog::error("[Post Processing] Framebuffer is not complete");
+				}
+		}
+		/* END POST PROCESSING */
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -60,7 +86,8 @@ graphicsEngine::graphicsEngine(window &app) :
 	m_forwardRenderShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs"),
 	m_deferredRenderShader("shaders/forward_lighting.vs", "shaders/deferred_rendering.fs"),
 	m_deferredLightingShader("shaders/deferred_lighting.vs", "shaders/deferred_lighting.fs"),
-	m_lightDebugShader("shaders/basic3d.vs", "shaders/basic3d.fs")
+	m_lightDebugShader("shaders/basic3d.vs", "shaders/basic3d.fs"),
+	m_postProcessingShader("shaders/post_processing.vs", "shaders/post_processing.fs")
 	{
 		m_screenWidth = app.width;
 		m_screenHeight = app.height;
@@ -77,17 +104,30 @@ graphicsEngine::graphicsEngine(window &app) :
 		m_deferredRenderShader.setInt("material.specular", 1);
 		m_deferredRenderShader.setFloat("material.shininess", 128.f);
 
+		m_postProcessingShader.use();
+		m_postProcessingShader.setInt("Image", 0);
+
+		/* BEGIN DEFERRED RENDERING */
 		glGenFramebuffers(1, &m_deferredFramebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
 
-		unsigned int gBuffers[c_gBufferCount] = {};
-		glGenTextures(c_gBufferCount, gBuffers);
+		unsigned int gBuffers[c_gBufferCount + 1] = {};
+		glGenTextures(c_gBufferCount + 1, gBuffers);
 
 		m_gColourSpecular = gBuffers[0];
 		m_gNormal = gBuffers[1];
 		m_gPosition = gBuffers[2];
+		m_gDepth = gBuffers[3];
 
-		glGenTextures(1, &m_gDepth);
+		/* END DEFERRED RENDERING */
+
+		/* BEGIN POST PROCESSING */
+		glGenFramebuffers(1, &m_ppFramebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
+		glGenTextures(1, &m_ppRenderTexture);
+		glGenTextures(1, &m_ppDepth);
+
+		/* END POST PROCESSING*/
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -112,10 +152,9 @@ void graphicsEngine::render(const renderObject &object)
 
 void graphicsEngine::draw(const camera &camera) const
 	{
-		// TODO: Implement light volumes via rendering spheres that represent light radius
 		glCullFace(GL_BACK);
 
-		m_forwardRenderShader.use();
+		/*m_forwardRenderShader.use();
 
 		m_forwardRenderShader.setVec3("lightInfo.direction", directionalLight.direction);
 		//m_forwardRenderShader.setVec3("lightInfo.position", testLight.position);
@@ -129,7 +168,7 @@ void graphicsEngine::draw(const camera &camera) const
 
 		m_forwardRenderShader.setFloat("light.constant", directionalLight.info.constant);
 		m_forwardRenderShader.setFloat("light.linear", directionalLight.info.linear);
-		m_forwardRenderShader.setFloat("light.quadratic", directionalLight.info.quadratic);
+		m_forwardRenderShader.setFloat("light.quadratic", directionalLight.info.quadratic);*/
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
 		glClearColor(0, 0, 0, 1);
@@ -153,7 +192,7 @@ void graphicsEngine::draw(const camera &camera) const
 			}
 		glBindVertexArray(0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 		glBlendEquation(GL_FUNC_ADD);
@@ -276,6 +315,21 @@ void graphicsEngine::draw(const camera &camera) const
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glEnable(GL_CULL_FACE);
 			}
+
+		glDisable(GL_CULL_FACE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_ppRenderTexture);
+
+		m_postProcessingShader.use();
+		m_postProcessingShader.setFloat("gamma", 2.2f);
+
+		glBindVertexArray(m_quadVAO.vao);
+		glDrawElements(GL_TRIANGLES, m_quadVAO.indexCount, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		glEnable(GL_CULL_FACE);
 	}
 
 spotLight &graphicsEngine::createSpotLight()

@@ -67,7 +67,7 @@ vec3 lightingCalculation(vec3 VertexNormal, vec3 FragPos, vec3 Albedo, vec3 Spec
         float intensity = intensities[lightInfo.type];
 
         float distance = length(lightInfo.position - FragPos);
-        float attenuation = 1 / pow(light.constant + light.linear * distance + light.quadratic * distance * distance, 2);
+        float attenuation = 1.0 / pow(light.constant + light.linear * distance + light.quadratic * distance * distance, 2);
 
         vec3 finalColour = (ambient + intensity * (1 - shadow) * (diffuse + specular)) * attenuation;
 
