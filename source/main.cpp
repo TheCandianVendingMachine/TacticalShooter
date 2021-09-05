@@ -58,7 +58,7 @@ int main()
 		graphicsEngine graphicsEngine(app);
 
 		texture diffuse("face.png", true);
-		texture specular("face_specular.png", true);
+		texture specular("face_specular.png", false);
 
 		renderObject sphere;
 		sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
@@ -80,18 +80,19 @@ int main()
 		//pl.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
 		//pl.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
 		pl.position = glm::vec3(0.f, 4.f, 2.f);
-		pl.info.ambient = glm::vec3(0.1f);
+		pl.info.ambient = glm::vec3(0.001f);
+		pl.info.diffuse = glm::vec3(0.08f);
 		pl.info.constant = 1.f;
-		pl.info.linear = 0.7;
-		pl.info.quadratic = 0.017;
+		pl.info.linear = 0.07;
+		pl.info.quadratic = 0.0017;
 
 		spotLight &sp = graphicsEngine.createSpotLight();
 		sp.cutoffAngleCos = glm::cos(glm::radians(5.0f));
 		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
 		sp.info.ambient = glm::vec3(0.f);
 		sp.info.constant = 1.f;
-		sp.info.linear = 0.07;
-		sp.info.quadratic = .08;
+		sp.info.linear = 0.7;
+		sp.info.quadratic = 1.8;
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
@@ -106,6 +107,9 @@ int main()
 		fe::clock runClock;
 		fe::time lastTime = runClock.getTime();
 		fe::time accumulator;
+
+		bool anchorSpotlight = false;
+		bool pressed = false;
 
 		while (app.isOpen())
 			{
@@ -177,8 +181,21 @@ int main()
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
 
-				sp.position = cam.position;
-				sp.direction = cam.direction;
+				if (!pressed && glfwGetKey(app.getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
+					{
+						anchorSpotlight = !anchorSpotlight;
+						pressed = true;
+					}
+				else if (pressed && glfwGetKey(app.getWindow(), GLFW_KEY_SPACE) == GLFW_RELEASE)
+					{
+						pressed = false;
+					}
+
+				if (!anchorSpotlight) 
+					{
+						sp.position = cam.position;
+						sp.direction = cam.direction;
+					}
 
 				graphicsEngine.draw(cam);
 				app.display();

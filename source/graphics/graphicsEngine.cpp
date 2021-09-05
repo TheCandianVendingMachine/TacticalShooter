@@ -155,7 +155,7 @@ void graphicsEngine::draw(const camera &camera) const
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ZERO);
+		glBlendFunc(GL_ONE, GL_ONE);
 		glBlendEquation(GL_FUNC_ADD);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,10 +196,7 @@ void graphicsEngine::draw(const camera &camera) const
 		glBindVertexArray(m_pointLightVAO.vao);
 		for (const auto &pointLight : m_pointLights)
 			{
-				//m_deferredLightingShader.setVec3("lightInfo.direction", pointLight.direction);
 				m_deferredLightingShader.setVec3("lightInfo.position", pointLight.position);
-				//m_deferredLightingShader.setFloat("lightInfo.cutoff", pointLight.cutoffAngleCos);
-				//m_deferredLightingShader.setFloat("lightInfo.cutoffOuter", pointLight.outerCutoffAngleCos);
 				m_deferredLightingShader.setInt("lightInfo.type", 1);
 
 				m_deferredLightingShader.setVec3("light.ambient", pointLight.info.ambient);
