@@ -39,6 +39,7 @@
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 int main()
 	{
@@ -74,16 +75,23 @@ int main()
 		graphicsEngine.render(plane);
 		graphicsEngine.render(sphere);
 
-		pointLight pl;
+		pointLight &pl = graphicsEngine.createPointLight();
 		//pl.cutoffAngleCos = glm::cos(glm::radians(2.5f));
 		//pl.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
 		//pl.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
 		pl.position = glm::vec3(0.f, 4.f, 2.f);
 		pl.info.ambient = glm::vec3(0.001f);
 		pl.info.constant = 1.f;
-		pl.info.linear = 0.07;
+		pl.info.linear = 0.7;
 		pl.info.quadratic = 0.017;
-		graphicsEngine.addLight(pl);
+
+		spotLight &sp = graphicsEngine.createSpotLight();
+		sp.cutoffAngleCos = glm::cos(glm::radians(5.0f));
+		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
+		sp.info.ambient = glm::vec3(0.f);
+		sp.info.constant = 1.f;
+		sp.info.linear = 0.07;
+		sp.info.quadratic = .08;
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
@@ -168,6 +176,9 @@ int main()
 
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
+
+				sp.position = cam.position;
+				sp.direction = cam.direction;
 
 				graphicsEngine.draw(cam);
 				app.display();

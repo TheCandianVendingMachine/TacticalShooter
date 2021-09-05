@@ -2,6 +2,7 @@
 // High level API to render arbitrary VAO's with associated transforms
 #pragma once
 #include <vector>
+#include <plf_colony.h>
 #include "shader.hpp"
 #include "renderObject.hpp"
 #include "light/directionalLight.hpp"
@@ -17,8 +18,8 @@ class graphicsEngine
 		private:
 			std::vector<const renderObject*> m_renderObjects;
 
-			std::vector<spotLight> m_spotLights;
-			std::vector<pointLight> m_pointLights;
+			plf::colony<spotLight> m_spotLights;
+			plf::colony<pointLight> m_pointLights;
 
 			shader m_forwardRenderShader;
 
@@ -43,7 +44,7 @@ class graphicsEngine
 			unsigned int m_screenWidth = 0;
 			unsigned int m_screenHeight = 0;
 
-			bool m_debugDrawLight = false;
+			bool m_debugDrawLight = true;
 
 			void createFramebuffers();
 
@@ -52,8 +53,8 @@ class graphicsEngine
 
 			graphicsEngine(window &app);
 
-			void addLight(const spotLight &light);
-			void addLight(const pointLight &light);
+			spotLight &createSpotLight();
+			pointLight &createPointLight();
 
 			void render(const renderObject &object);
 			void draw(const camera &camera) const;

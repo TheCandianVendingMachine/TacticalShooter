@@ -105,16 +105,6 @@ graphicsEngine::graphicsEngine(window &app) :
 		m_directionalLightVAO = primitive::plane::generate(vertex::attributes::POSITION);
 	}
 
-void graphicsEngine::addLight(const spotLight &light)
-	{
-		m_spotLights.push_back(light);
-	}
-
-void graphicsEngine::addLight(const pointLight &light)
-	{
-		m_pointLights.push_back(light);
-	}
-
 void graphicsEngine::render(const renderObject &object)
 	{
 		m_renderObjects.push_back(&object);
@@ -164,6 +154,9 @@ void graphicsEngine::draw(const camera &camera) const
 		glBindVertexArray(0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glBlendEquation(GL_FUNC_ADD);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -199,6 +192,8 @@ void graphicsEngine::draw(const camera &camera) const
 		glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
 
 		glCullFace(GL_FRONT);
+
+		glBindVertexArray(m_pointLightVAO.vao);
 		for (const auto &pointLight : m_pointLights)
 			{
 				//m_deferredLightingShader.setVec3("lightInfo.direction", pointLight.direction);
@@ -220,10 +215,34 @@ void graphicsEngine::draw(const camera &camera) const
 				model = glm::scale(model, glm::vec3(scale));
 				m_deferredLightingShader.setMat4("model", model);
 
-				glBindVertexArray(m_pointLightVAO.vao);
 				glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
 			}
 
+		for (const auto &spotLight : m_spotLights)
+			{
+				m_deferredLightingShader.setVec3("lightInfo.direction", spotLight.direction);
+				m_deferredLightingShader.setVec3("lightInfo.position", spotLight.position);
+				m_deferredLightingShader.setFloat("lightInfo.cutoff", spotLight.cutoffAngleCos);
+				m_deferredLightingShader.setFloat("lightInfo.cutoffOuter", spotLight.outerCutoffAngleCos);
+				m_deferredLightingShader.setInt("lightInfo.type", 2);
+
+				m_deferredLightingShader.setVec3("light.ambient", spotLight.info.ambient);
+				m_deferredLightingShader.setVec3("light.diffuse", spotLight.info.diffuse);
+				m_deferredLightingShader.setVec3("light.specular", spotLight.info.specular);
+
+				m_deferredLightingShader.setFloat("light.constant", spotLight.info.constant);
+				m_deferredLightingShader.setFloat("light.linear", spotLight.info.linear);
+				m_deferredLightingShader.setFloat("light.quadratic", spotLight.info.quadratic);
+
+				float scale = spotLight.info.radius(camera.zFar / 2.f);
+				glm::mat4 model = glm::translate(glm::mat4(1.f), spotLight.position);
+				model = glm::scale(model, glm::vec3(scale));
+				m_deferredLightingShader.setMat4("model", model);
+
+				glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+			}
+
+		glDisable(GL_BLEND);
 		glBindVertexArray(0);
 
 		if (m_debugDrawLight) 
@@ -234,18 +253,40 @@ void graphicsEngine::draw(const camera &camera) const
 
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				glDisable(GL_CULL_FACE);
+
+				glBindVertexArray(m_pointLightVAO.vao);
 				for (const auto &pointLight : m_pointLights)
+					{
+						float scale = pointLight.info.radius(camera.zFar / 2.f);
+						glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
+						model = glm::scale(model, glm::vec3(scale));
+						m_lightDebugShader.setMat4("model", model);
+
+						glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+					}
+
+				for (const auto &spotLight : m_spotLights)
 				{
-					float scale = pointLight.info.radius(camera.zFar / 2.f);
-					glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
+					float scale = spotLight.info.radius(camera.zFar / 2.f);
+					glm::mat4 model = glm::translate(glm::mat4(1.f), spotLight.position);
 					model = glm::scale(model, glm::vec3(scale));
 					m_lightDebugShader.setMat4("model", model);
 
-					glBindVertexArray(m_pointLightVAO.vao);
-					glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+					//glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
 				}
+
 				glBindVertexArray(0);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glEnable(GL_CULL_FACE);
 			}
+	}
+
+spotLight &graphicsEngine::createSpotLight()
+	{
+		return *m_spotLights.emplace();
+	}
+
+pointLight &graphicsEngine::createPointLight()
+	{
+		return *m_pointLights.emplace();
 	}
