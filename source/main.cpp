@@ -80,7 +80,7 @@ int main()
 		//pl.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
 		//pl.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
 		pl.position = glm::vec3(0.f, 4.f, 2.f);
-		pl.info.ambient = glm::vec3(0.001f);
+		pl.info.ambient = glm::vec3(0.1f);
 		pl.info.constant = 1.f;
 		pl.info.linear = 0.7;
 		pl.info.quadratic = 0.017;

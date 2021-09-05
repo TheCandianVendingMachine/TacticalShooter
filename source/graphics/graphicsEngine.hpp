@@ -44,7 +44,7 @@ class graphicsEngine
 			unsigned int m_screenWidth = 0;
 			unsigned int m_screenHeight = 0;
 
-			bool m_debugDrawLight = true;
+			bool m_debugDrawLight = false;
 
 			void createFramebuffers();
 

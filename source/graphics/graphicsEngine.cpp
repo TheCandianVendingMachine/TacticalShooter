@@ -155,7 +155,7 @@ void graphicsEngine::draw(const camera &camera) const
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE);
+		glBlendFunc(GL_ONE, GL_ZERO);
 		glBlendEquation(GL_FUNC_ADD);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -272,7 +272,7 @@ void graphicsEngine::draw(const camera &camera) const
 					model = glm::scale(model, glm::vec3(scale));
 					m_lightDebugShader.setMat4("model", model);
 
-					//glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+					glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
 				}
 
 				glBindVertexArray(0);
