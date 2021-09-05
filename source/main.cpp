@@ -2,7 +2,6 @@
 	ENGINE: OpenGL Renderer
 	ENGINE: Shadows
 	ENGINE: Abstracted framebuffers
-	ENGINE: Deferred rendering
 	ENGINE: Font rendering
 	ENGINE: PBR
 	ENGINE: Multiplayer
@@ -76,12 +75,9 @@ int main()
 		graphicsEngine.render(sphere);
 
 		pointLight &pl = graphicsEngine.createPointLight();
-		//pl.cutoffAngleCos = glm::cos(glm::radians(2.5f));
-		//pl.outerCutoffAngleCos = glm::cos(glm::radians(5.f));
-		//pl.direction = glm::normalize(glm::vec3(0.f, -1.f, 1.f));
 		pl.position = glm::vec3(0.f, 4.f, 2.f);
 		pl.info.ambient = glm::vec3(0.001f);
-		pl.info.diffuse = glm::vec3(0.08f);
+		pl.info.diffuse = glm::vec3(0.04f);
 		pl.info.constant = 1.f;
 		pl.info.linear = 0.07;
 		pl.info.quadratic = 0.0017;
@@ -91,8 +87,8 @@ int main()
 		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
 		sp.info.ambient = glm::vec3(0.f);
 		sp.info.constant = 1.f;
-		sp.info.linear = 0.7;
-		sp.info.quadratic = 1.8;
+		sp.info.linear = 0.35;
+		sp.info.quadratic = 0.44;
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
