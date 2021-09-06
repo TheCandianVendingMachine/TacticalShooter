@@ -4,6 +4,13 @@
 	ENGINE: Abstracted framebuffers
 	ENGINE: Font rendering
 	ENGINE: PBR
+	ENGINE: Normal Mapping
+	ENGINE: Paralax Mapping
+	ENGINE: HDR
+	ENGINE: Bloom
+	ENGINE: Billboarded Sprites
+	ENGINE: Decals
+	ENGINE: 3d mesh loader
 	ENGINE: Multiplayer
 	ENGINE: PhysX
 	ENGINE: Game state machine
