@@ -6,7 +6,6 @@
 	ENGINE: PBR
 	ENGINE: Normal Mapping
 	ENGINE: Paralax Mapping
-	ENGINE: HDR
 	ENGINE: Bloom
 	ENGINE: Billboarded Sprites
 	ENGINE: Decals
@@ -93,6 +92,7 @@ int main()
 		sp.cutoffAngleCos = glm::cos(glm::radians(5.0f));
 		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
 		sp.info.ambient = glm::vec3(0.f);
+		sp.info.diffuse = { 100.f, 100.f, 100.f };
 		sp.info.constant = 1.f;
 		sp.info.linear = 0.35;
 		sp.info.quadratic = 0.44;

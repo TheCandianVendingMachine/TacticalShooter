@@ -34,7 +34,7 @@ void graphicsEngine::createFramebuffers()
 
 			// colour + specular buffer
 			glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gColourSpecular, 0);
@@ -60,7 +60,7 @@ void graphicsEngine::createFramebuffers()
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
 			glBindTexture(GL_TEXTURE_2D, m_ppRenderTexture);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_UNSIGNED_INT, nullptr);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_ppRenderTexture, 0);
@@ -330,6 +330,7 @@ void graphicsEngine::draw(const camera &camera) const
 
 		m_postProcessingShader.use();
 		m_postProcessingShader.setFloat("gamma", 2.2f);
+		m_postProcessingShader.setFloat("exposure", 1.f);
 
 		glBindVertexArray(m_quadVAO.vao);
 		glDrawElements(GL_TRIANGLES, m_quadVAO.indexCount, GL_UNSIGNED_INT, 0);
