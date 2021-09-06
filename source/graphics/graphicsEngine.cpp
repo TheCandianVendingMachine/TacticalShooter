@@ -170,6 +170,7 @@ void graphicsEngine::draw(const camera &camera) const
 		m_forwardRenderShader.setFloat("light.linear", directionalLight.info.linear);
 		m_forwardRenderShader.setFloat("light.quadratic", directionalLight.info.quadratic);*/
 
+		/* BEGIN DEFERRED RENDERING */
 		glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -190,12 +191,13 @@ void graphicsEngine::draw(const camera &camera) const
 				glBindVertexArray(renderObject->vao.vao);
 				glDrawElements(GL_TRIANGLES, renderObject->vao.indexCount, GL_UNSIGNED_INT, 0);
 			}
-		glBindVertexArray(0);
-
+		/* END DEFERRED RENDERING */
+		/* BEGIN LIGHT EQUATION */
 		glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 		glBlendEquation(GL_FUNC_ADD);
+		glDisable(GL_DEPTH_TEST); // we want fragments to overdraw
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -278,9 +280,10 @@ void graphicsEngine::draw(const camera &camera) const
 				glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
 			}
 
+		glEnable(GL_DEPTH_TEST); // we want fragments to overdraw
 		glDisable(GL_BLEND);
-		glBindVertexArray(0);
-
+		/* END LIGHT EQUATION */
+		/* BEGIN DEBUG DRAWING */
 		if (m_debugDrawLight) 
 			{
 				m_lightDebugShader.use();
@@ -315,7 +318,9 @@ void graphicsEngine::draw(const camera &camera) const
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				glEnable(GL_CULL_FACE);
 			}
+		/* END DEBUG DRAWING */
 
+		/* BEGIN POST PROCESSING */
 		glDisable(GL_CULL_FACE);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -330,6 +335,7 @@ void graphicsEngine::draw(const camera &camera) const
 		glDrawElements(GL_TRIANGLES, m_quadVAO.indexCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 		glEnable(GL_CULL_FACE);
+		/* END POST PROCESSING */
 	}
 
 spotLight &graphicsEngine::createSpotLight()
