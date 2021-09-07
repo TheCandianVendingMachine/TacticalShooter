@@ -84,8 +84,8 @@ void graphicsEngine::createFramebuffers()
 
 graphicsEngine::graphicsEngine(window &app) :
 	m_forwardRenderShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs"),
-	m_deferredRenderShader("shaders/forward_lighting.vs", "shaders/deferred_rendering.fs"),
-	m_deferredLightingShader("shaders/deferred_lighting.vs", "shaders/deferred_lighting.fs"),
+	m_deferredRenderShader("shaders/forward_lighting.vs", "shaders/deferred_rendering_phong.fs"),
+	m_deferredLightingShader("shaders/deferred_lighting_phong.vs", "shaders/deferred_lighting_pbr.fs"),
 	m_lightDebugShader("shaders/basic3d.vs", "shaders/basic3d.fs"),
 	m_postProcessingShader("shaders/post_processing.vs", "shaders/post_processing.fs")
 	{
@@ -192,8 +192,9 @@ void graphicsEngine::draw(const camera &camera) const
 				glDrawElements(GL_TRIANGLES, renderObject->vao.indexCount, GL_UNSIGNED_INT, 0);
 			}
 		/* END DEFERRED RENDERING */
-		/* BEGIN LIGHT EQUATION */
+
 		glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
+		/* BEGIN LIGHT EQUATION */
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 		glBlendEquation(GL_FUNC_ADD);
@@ -202,28 +203,27 @@ void graphicsEngine::draw(const camera &camera) const
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		m_deferredLightingShader.use();
-		m_deferredLightingShader.setVec2("FramebufferSize", glm::vec2(m_screenWidth, m_screenHeight));
+		m_deferredLightingShader.setVec2("framebufferSize", glm::vec2(m_screenWidth, m_screenHeight));
+		m_deferredLightingShader.setVec3("cameraPosition", camera.position);
 
 		m_deferredLightingShader.setInt("gPosition", 0);
 		m_deferredLightingShader.setInt("gNormal", 1);
-		m_deferredLightingShader.setInt("gColourSpecular", 2);
+		m_deferredLightingShader.setInt("gAlbedo", 2);
+		m_deferredLightingShader.setInt("gMetallicRoughtnessAO", 3);
 
 		m_deferredLightingShader.setVec3("lightInfo.direction", directionalLight.direction);
-		//m_deferredLightingShader.setVec3("lightInfo.position", testLight.position);
-		//m_deferredLightingShader.setFloat("lightInfo.cutoff", testLight.cutoffAngleCos);
-		//m_deferredLightingShader.setFloat("lightInfo.cutoffOuter", testLight.outerCutoffAngleCos);
 		m_deferredLightingShader.setInt("lightInfo.type", 0);
 
 		m_deferredLightingShader.setVec3("light.ambient", directionalLight.info.ambient);
 		m_deferredLightingShader.setVec3("light.diffuse", directionalLight.info.diffuse);
-		m_deferredLightingShader.setVec3("light.specular", directionalLight.info.specular);
-
-		m_deferredLightingShader.setFloat("light.constant", directionalLight.info.constant);
-		m_deferredLightingShader.setFloat("light.linear", directionalLight.info.linear);
-		m_deferredLightingShader.setFloat("light.quadratic", directionalLight.info.quadratic);
 
 		m_deferredLightingShader.setMat4("view", camera.view());
 		m_deferredLightingShader.setMat4("projection", camera.projection());
+
+		m_deferredLightingShader.setVec3("albedo", glm::vec3(0.61f, 0.f, 0.f));
+		m_deferredLightingShader.setFloat("metallic", 0.1f);
+		m_deferredLightingShader.setFloat("roughness", 0.1f);
+		m_deferredLightingShader.setFloat("ambientOcclusion", 0.2f);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_gPosition);
@@ -237,18 +237,13 @@ void graphicsEngine::draw(const camera &camera) const
 		glBindVertexArray(m_pointLightVAO.vao);
 		for (const auto &pointLight : m_pointLights)
 			{
-				m_deferredLightingShader.setVec3("lightInfo.position", pointLight.position);
-				m_deferredLightingShader.setInt("lightInfo.type", 1);
+				m_deferredLightingShader.setVec3("lightSpatialInfo.position", pointLight.position);
+				m_deferredLightingShader.setInt("lightSpatialInfo.type", 1);
 
 				m_deferredLightingShader.setVec3("light.ambient", pointLight.info.ambient);
 				m_deferredLightingShader.setVec3("light.diffuse", pointLight.info.diffuse);
-				m_deferredLightingShader.setVec3("light.specular", pointLight.info.specular);
 
-				m_deferredLightingShader.setFloat("light.constant", pointLight.info.constant);
-				m_deferredLightingShader.setFloat("light.linear", pointLight.info.linear);
-				m_deferredLightingShader.setFloat("light.quadratic", pointLight.info.quadratic);
-
-				float scale = pointLight.info.radius(camera.zFar / 2.f);
+				float scale = pointLight.info.radius();
 				glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
 				model = glm::scale(model, glm::vec3(scale));
 				m_deferredLightingShader.setMat4("model", model);
@@ -258,21 +253,16 @@ void graphicsEngine::draw(const camera &camera) const
 
 		for (const auto &spotLight : m_spotLights)
 			{
-				m_deferredLightingShader.setVec3("lightInfo.direction", spotLight.direction);
-				m_deferredLightingShader.setVec3("lightInfo.position", spotLight.position);
-				m_deferredLightingShader.setFloat("lightInfo.cutoff", spotLight.cutoffAngleCos);
-				m_deferredLightingShader.setFloat("lightInfo.cutoffOuter", spotLight.outerCutoffAngleCos);
-				m_deferredLightingShader.setInt("lightInfo.type", 2);
+				m_deferredLightingShader.setVec3("lightSpatialInfo.direction", spotLight.direction);
+				m_deferredLightingShader.setVec3("lightSpatialInfo.position", spotLight.position);
+				m_deferredLightingShader.setFloat("lightSpatialInfo.cutoff", spotLight.cutoffAngleCos);
+				m_deferredLightingShader.setFloat("lightSpatialInfo.cutoffOuter", spotLight.outerCutoffAngleCos);
+				m_deferredLightingShader.setInt("lightSpatialInfo.type", 2);
 
 				m_deferredLightingShader.setVec3("light.ambient", spotLight.info.ambient);
 				m_deferredLightingShader.setVec3("light.diffuse", spotLight.info.diffuse);
-				m_deferredLightingShader.setVec3("light.specular", spotLight.info.specular);
 
-				m_deferredLightingShader.setFloat("light.constant", spotLight.info.constant);
-				m_deferredLightingShader.setFloat("light.linear", spotLight.info.linear);
-				m_deferredLightingShader.setFloat("light.quadratic", spotLight.info.quadratic);
-
-				float scale = spotLight.info.radius(camera.zFar / 2.f);
+				float scale = spotLight.info.radius();
 				glm::mat4 model = glm::translate(glm::mat4(1.f), spotLight.position);
 				model = glm::scale(model, glm::vec3(scale));
 				m_deferredLightingShader.setMat4("model", model);
@@ -296,7 +286,7 @@ void graphicsEngine::draw(const camera &camera) const
 				glBindVertexArray(m_pointLightVAO.vao);
 				for (const auto &pointLight : m_pointLights)
 					{
-						float scale = pointLight.info.radius(camera.zFar / 2.f);
+						float scale = pointLight.info.radius();
 						glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
 						model = glm::scale(model, glm::vec3(scale));
 						m_lightDebugShader.setMat4("model", model);
@@ -306,7 +296,7 @@ void graphicsEngine::draw(const camera &camera) const
 
 				for (const auto &spotLight : m_spotLights)
 				{
-					float scale = spotLight.info.radius(camera.zFar / 2.f);
+					float scale = spotLight.info.radius();
 					glm::mat4 model = glm::translate(glm::mat4(1.f), spotLight.position);
 					model = glm::scale(model, glm::vec3(scale));
 					m_lightDebugShader.setMat4("model", model);

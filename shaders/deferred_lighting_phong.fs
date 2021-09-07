@@ -28,8 +28,8 @@ uniform sampler2D gColourSpecular;
 uniform Light light;
 uniform LightInfo lightInfo;
 
-uniform vec3 ViewPos;
-uniform vec2 FramebufferSize;
+uniform vec3 viewPos;
+uniform vec2 framebufferSize;
 
 vec3 getLightDirection(vec3 FragPos)
     {
@@ -46,7 +46,7 @@ vec3 lightingCalculation(vec3 VertexNormal, vec3 FragPos, vec3 Albedo, vec3 Spec
         vec3 normal = normalize(VertexNormal);
 
         vec3 lightDir = getLightDirection(FragPos);
-        vec3 viewDir = normalize(ViewPos - FragPos);
+        vec3 viewDir = normalize(viewPos - FragPos);
         vec3 halfwayDir = normalize(lightDir + viewDir);
 
         float diff = max(dot(normal, lightDir), 0);       
@@ -67,7 +67,7 @@ vec3 lightingCalculation(vec3 VertexNormal, vec3 FragPos, vec3 Albedo, vec3 Spec
         float intensity = intensities[lightInfo.type];
 
         float distance = length(lightInfo.position - FragPos);
-        float attenuation = 1.0 / pow(light.constant + light.linear * distance + light.quadratic * distance * distance, 2);
+        float attenuation = 1.0 / (distance * distance);
 
         vec3 finalColour = (ambient + intensity * (1 - shadow) * (diffuse + specular)) * attenuation;
 
@@ -76,7 +76,7 @@ vec3 lightingCalculation(vec3 VertexNormal, vec3 FragPos, vec3 Albedo, vec3 Spec
 
 void main()
     {
-        vec2 normalFragCoord = gl_FragCoord.xy / FramebufferSize;
+        vec2 normalFragCoord = gl_FragCoord.xy / framebufferSize;
 
         vec3 FragPos = texture(gPosition, normalFragCoord).rgb;
         vec3 Normal = texture(gNormal, normalFragCoord).rgb;

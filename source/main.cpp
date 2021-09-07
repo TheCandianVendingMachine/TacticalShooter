@@ -65,37 +65,33 @@ int main()
 		texture diffuse("face.png", true);
 		texture specular("face_specular.png", false);
 
-		renderObject sphere;
-		sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
-		sphere.diffuse = diffuse;
-		sphere.specular = specular;
+		std::vector<renderObject> spheres(64);
 
-		renderObject plane;
-		plane.vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
-		plane.diffuse = diffuse;
-		plane.specular = specular;
+		for (int i = 0; i < 8; i++)
+			{
+				for (int j = 0; j < 8; j++)
+					{
+						renderObject &sphere = spheres[i + 8 * j];
+						sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+						sphere.diffuse = diffuse;
+						sphere.specular = specular;
 
-		sphere.transform.position = { 5.f, 0.f, 0.f };
+						sphere.transform.position = { 0.f, 12.f - (3.f * j), 12.f - (3.f * i) };
 
-		graphicsEngine.render(plane);
-		graphicsEngine.render(sphere);
+						graphicsEngine.render(sphere);
+					}
+			}
 
 		pointLight &pl = graphicsEngine.createPointLight();
-		pl.position = glm::vec3(0.f, 4.f, 2.f);
+		pl.position = glm::vec3(-5.f, 4.f, 0.f);
 		pl.info.ambient = glm::vec3(0.001f);
-		pl.info.diffuse = glm::vec3(0.04f);
-		pl.info.constant = 1.f;
-		pl.info.linear = 0.07;
-		pl.info.quadratic = 0.0017;
+		pl.info.diffuse = glm::vec3(1.4f);
 
 		spotLight &sp = graphicsEngine.createSpotLight();
 		sp.cutoffAngleCos = glm::cos(glm::radians(5.0f));
 		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
 		sp.info.ambient = glm::vec3(0.f);
-		sp.info.diffuse = { 100.f, 100.f, 100.f };
-		sp.info.constant = 1.f;
-		sp.info.linear = 0.35;
-		sp.info.quadratic = 0.44;
+		sp.info.diffuse = glm::vec3(100.f);
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };

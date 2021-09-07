@@ -7,25 +7,18 @@ struct light
 	{
 		glm::vec3 ambient = { 1.f, 1.f, 1.f };
 		glm::vec3 diffuse = { 1.f, 1.f, 1.f };
-		glm::vec3 specular = { 1.f, 1.f, 1.f };
 
-		float constant = 1.f;
-		float linear = 0.f;
-		float quadratic = 0.f;
-
-		float radius(float max = std::numeric_limits<float>::max()) const
+		float radius() const
 			{
-				constexpr float iMaxAtten = 256.f / 5.f;
+				constexpr float epsilon = 0.001f;
 
-				float lightMaxComponent = std::fmaxf(std::fmaxf(diffuse.r, diffuse.g), diffuse.b);
-				float radical = linear * linear - 4 * quadratic * (constant - iMaxAtten * lightMaxComponent);
+				// c * 1/d^2 <= e
+				// 1/d^2 <= e/c
+				// d^2 <= c/e
+				// d <= sqrt(c/e)
 
-				float radius = (-linear + std::sqrtf(radical)) / (2 * quadratic);
+				float distance = glm::length(glm::sqrt(diffuse / epsilon));
 
-				if (radius != radius)
-					{
-						radius = max;
-					}
-				return radius;
+				return distance;
 			}
 	};
