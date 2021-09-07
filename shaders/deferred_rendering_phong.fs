@@ -1,7 +1,8 @@
 #version 330 core
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gColourSpecular;
+layout (location = 2) out vec3 gAlbedo;
+layout (location = 3) out vec3 gMetallicRoughnessAO;
 
 in vec3 VertexNormal;
 in vec3 FragPos;
@@ -20,6 +21,11 @@ void main()
     {
         gPosition = FragPos;
         gNormal = VertexNormal;
-        gColourSpecular.rgb = texture(material.diffuse, TextureCoords).rgb;
-        gColourSpecular.a = texture(material.specular, TextureCoords).r;
+        //gAlbedo = texture(material.diffuse, TextureCoords).rgb;
+        
+        gAlbedo = vec3(0.61, 0, 0);
+        
+        gMetallicRoughnessAO.r = 0.3;
+        gMetallicRoughnessAO.g = 0.1;
+        gMetallicRoughnessAO.b = 1;
     }

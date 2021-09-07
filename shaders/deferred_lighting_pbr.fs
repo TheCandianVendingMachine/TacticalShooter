@@ -20,18 +20,13 @@ struct LightInfo
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
-uniform sampler2D gMetallicRoughtnessAO;
+uniform sampler2D gMetallicRoughnessAO;
 
 uniform vec3 cameraPosition;
 uniform vec2 framebufferSize;
 
 uniform Light light;
 uniform LightInfo lightSpatialInfo;
-
-uniform vec3 albedo;
-uniform float metallic;
-uniform float roughness;
-uniform float ambientOcclusion;
 
 vec3 fresnelShlick(float cosTheta, vec3 baseReflectivity)
     {
@@ -82,8 +77,13 @@ vec3 getLightDirection(vec3 FragPos)
 void main()
     {
         vec2 normalFragCoord = gl_FragCoord.xy / framebufferSize;
+
         vec3 FragPos = texture(gPosition, normalFragCoord).rgb;
         vec3 Normal = texture(gNormal, normalFragCoord).rgb;
+        vec3 Albedo = texture(gAlbedo, normalFragCoord).rgb;
+        float Metallic = texture(gMetallicRoughnessAO, normalFragCoord).r;
+        float Roughness = texture(gMetallicRoughnessAO, normalFragCoord).g;
+        float AmbientOcclusion = texture(gMetallicRoughnessAO, normalFragCoord).b;
 
         vec3 normal = normalize(Normal);
         vec3 viewDirection = normalize(cameraPosition - FragPos);
@@ -96,12 +96,12 @@ void main()
         vec3 radiance = light.diffuse * attenuation;
 
         vec3 baseReflectivity = vec3(0.04);
-        baseReflectivity = mix(baseReflectivity, albedo, metallic);
+        baseReflectivity = mix(baseReflectivity, Albedo, Metallic);
         vec3 f = fresnelShlick(max(dot(halfVector, viewDirection), 0), baseReflectivity);
 
         // BRDF
-        float ndf = distributionGGX(normal, halfVector, roughness);
-        float g = geometryGGX(normal, viewDirection, lightDir, roughness);
+        float ndf = distributionGGX(normal, halfVector, Roughness);
+        float g = geometryGGX(normal, viewDirection, lightDir, Roughness);
 
         vec3 specular = (ndf * g * f)/ (4 * max(dot(normal, viewDirection), 0) * max(dot(normal, lightDir), 0) + 0.00001);
 
@@ -118,12 +118,12 @@ void main()
 
         vec3 ks = f;
         vec3 kd = vec3(1) - ks;
-        kd *= 1 - metallic;
+        kd *= 1 - Metallic;
 
         float nDotL = max(dot(normal, lightDir), 0);
-        vec3 lightColour = (kd * albedo / PI + specular) * radiance * nDotL; // may have to sum this in a texture and then do final lighting in another pass
+        vec3 lightColour = (kd * Albedo / PI + specular) * radiance * nDotL; // may have to sum this in a texture and then do final lighting in another pass
 
-        vec3 ambient = light.ambient * albedo * ambientOcclusion;
+        vec3 ambient = light.ambient * Albedo * AmbientOcclusion;
         FragColour = vec4(ambient + intensity * lightColour, 1);
     }
 

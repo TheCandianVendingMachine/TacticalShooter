@@ -41,7 +41,8 @@ class graphicsEngine
 
 			unsigned int m_gPosition = 0;
 			unsigned int m_gNormal = 0;
-			unsigned int m_gColourSpecular = 0;
+			unsigned int m_gAlbedo = 0;
+			unsigned int m_gMetallicRoughnessAO = 0;
 
 			// post processing
 			unsigned int m_ppFramebuffer = 0;

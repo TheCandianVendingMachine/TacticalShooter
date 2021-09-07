@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
-constexpr unsigned int c_gBufferCount = 3;
+constexpr unsigned int c_gBufferCount = 4;
 
 void graphicsEngine::createFramebuffers()
 	{
@@ -32,17 +32,25 @@ void graphicsEngine::createFramebuffers()
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gNormal, 0);
 
-			// colour + specular buffer
-			glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGBA, GL_FLOAT, nullptr);
+			// albedo buffer
+			glBindTexture(GL_TEXTURE_2D, m_gAlbedo);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGB, GL_FLOAT, nullptr);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gColourSpecular, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gAlbedo, 0);
+
+			// metallic, roughness, and ambient occlusion buffer
+			glBindTexture(GL_TEXTURE_2D, m_gMetallicRoughnessAO);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, static_cast<int>(m_screenWidth), static_cast<int>(m_screenHeight), 0, GL_RGB, GL_FLOAT, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gMetallicRoughnessAO, 0);
 
 			unsigned int attachments[c_gBufferCount] = {
 				GL_COLOR_ATTACHMENT0,
 				GL_COLOR_ATTACHMENT1,
-				GL_COLOR_ATTACHMENT2
+				GL_COLOR_ATTACHMENT2,
+				GL_COLOR_ATTACHMENT3
 			};
 			glDrawBuffers(c_gBufferCount, attachments);
 
@@ -114,10 +122,11 @@ graphicsEngine::graphicsEngine(window &app) :
 		unsigned int gBuffers[c_gBufferCount + 1] = {};
 		glGenTextures(c_gBufferCount + 1, gBuffers);
 
-		m_gColourSpecular = gBuffers[0];
-		m_gNormal = gBuffers[1];
-		m_gPosition = gBuffers[2];
-		m_gDepth = gBuffers[3];
+		m_gAlbedo =					gBuffers[0];
+		m_gNormal =					gBuffers[1];
+		m_gPosition =				gBuffers[2];
+		m_gMetallicRoughnessAO =	gBuffers[3];
+		m_gDepth =					gBuffers[4];
 
 		/* END DEFERRED RENDERING */
 
@@ -153,22 +162,6 @@ void graphicsEngine::render(const renderObject &object)
 void graphicsEngine::draw(const camera &camera) const
 	{
 		glCullFace(GL_BACK);
-
-		/*m_forwardRenderShader.use();
-
-		m_forwardRenderShader.setVec3("lightInfo.direction", directionalLight.direction);
-		//m_forwardRenderShader.setVec3("lightInfo.position", testLight.position);
-		//m_forwardRenderShader.setFloat("lightInfo.cutoff", testLight.cutoffAngleCos);
-		//m_forwardRenderShader.setFloat("lightInfo.cutoffOuter", testLight.outerCutoffAngleCos);
-		m_forwardRenderShader.setInt("lightInfo.type", 0);
-
-		m_forwardRenderShader.setVec3("light.ambient", directionalLight.info.ambient);
-		m_forwardRenderShader.setVec3("light.diffuse", directionalLight.info.diffuse);
-		m_forwardRenderShader.setVec3("light.specular", directionalLight.info.specular);
-
-		m_forwardRenderShader.setFloat("light.constant", directionalLight.info.constant);
-		m_forwardRenderShader.setFloat("light.linear", directionalLight.info.linear);
-		m_forwardRenderShader.setFloat("light.quadratic", directionalLight.info.quadratic);*/
 
 		/* BEGIN DEFERRED RENDERING */
 		glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
@@ -209,7 +202,7 @@ void graphicsEngine::draw(const camera &camera) const
 		m_deferredLightingShader.setInt("gPosition", 0);
 		m_deferredLightingShader.setInt("gNormal", 1);
 		m_deferredLightingShader.setInt("gAlbedo", 2);
-		m_deferredLightingShader.setInt("gMetallicRoughtnessAO", 3);
+		m_deferredLightingShader.setInt("gMetallicRoughnessAO", 3);
 
 		m_deferredLightingShader.setVec3("lightInfo.direction", directionalLight.direction);
 		m_deferredLightingShader.setInt("lightInfo.type", 0);
@@ -220,17 +213,14 @@ void graphicsEngine::draw(const camera &camera) const
 		m_deferredLightingShader.setMat4("view", camera.view());
 		m_deferredLightingShader.setMat4("projection", camera.projection());
 
-		m_deferredLightingShader.setVec3("albedo", glm::vec3(0.61f, 0.f, 0.f));
-		m_deferredLightingShader.setFloat("metallic", 0.1f);
-		m_deferredLightingShader.setFloat("roughness", 0.1f);
-		m_deferredLightingShader.setFloat("ambientOcclusion", 0.2f);
-
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_gPosition);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, m_gNormal);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_gColourSpecular);
+		glBindTexture(GL_TEXTURE_2D, m_gAlbedo);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, m_gMetallicRoughnessAO);
 
 		glCullFace(GL_FRONT);
 
