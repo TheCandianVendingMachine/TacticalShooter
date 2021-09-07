@@ -38,10 +38,10 @@ primitive::plane::plane()
 
 		indices = { 2, 1, 0, 0, 3, 2 };
 		vertices = {
-			vertex{ p0, nm, { 1.f, 0.f, 0.f }, uv0, { 1.f, 1.f, 1.f } },
-			vertex{ p1, nm, { 1.f, 0.f, 0.f }, uv1, { 1.f, 1.f, 1.f } },
-			vertex{ p2, nm, { 1.f, 0.f, 0.f }, uv2, { 1.f, 1.f, 1.f } },
-			vertex{ p3, nm, { 1.f, 0.f, 0.f }, uv3, { 1.f, 1.f, 1.f } },
+			vertex{ p0, nm, { 0.f, 0.f, 1.f }, uv0, { 1.f, 1.f, 1.f } },
+			vertex{ p1, nm, { 0.f, 0.f, 1.f }, uv1, { 1.f, 1.f, 1.f } },
+			vertex{ p2, nm, { 0.f, 0.f, 1.f }, uv2, { 1.f, 1.f, 1.f } },
+			vertex{ p3, nm, { 0.f, 0.f, 1.f }, uv3, { 1.f, 1.f, 1.f } },
 		};
 
 		glGenBuffers(1, &vbo);
@@ -130,6 +130,28 @@ void primitive::sphere::generateVertices() const
 
 void primitive::sphere::generateIndices() const
     {
+        auto createTriangle = [this] (unsigned int i0, unsigned int i1, unsigned int i2) {
+            indices.push_back(i0);
+            indices.push_back(i1);
+            indices.push_back(i2);
+
+            // generate vertex tangents
+            vertex &v1 = vertices[i0];
+            vertex &v2 = vertices[i1];
+            vertex &v3 = vertices[i2];
+
+            glm::vec3 edge1 = v2.position - v1.position;
+            glm::vec3 edge2 = v3.position - v1.position;
+            glm::vec2 dUV1 = v2.textureCoordinate - v1.textureCoordinate;
+            glm::vec2 dUV2 = v3.textureCoordinate - v1.textureCoordinate;
+
+            float f = 1.f / (dUV1.x * dUV2.y - dUV1.y * dUV2.x);
+
+            v1.tangent.x = f * (dUV2.y * edge1.x - dUV1.y * edge2.x);
+            v1.tangent.y = f * (dUV2.y * edge1.y - dUV1.y * edge2.y);
+            v1.tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
+        };
+
 		int currentVertexUp = 1;
         int currentVertexDown = 1;
         for (int i = 1; i <= c_resolution; i++)
@@ -144,18 +166,14 @@ void primitive::sphere::generateIndices() const
                 const int previousVertex = (i > 1) ? ((2 * i) * (i - 3) + 5) : 0;
 
                 // add first index to list since it is always the non pattern conforming
-                indices.push_back(wrapVertex);
-                indices.push_back(totalVertexCount - 1);
-                indices.push_back(previousVertex);
+                createTriangle(wrapVertex, totalVertexCount - 1, previousVertex);
 
                 // up triangles
                 int vertexCounter = 0;
                 int increment = 0;
                 for (int j = 0; j < totalVerticesToProcess - 1; j++)
                     {
-                        indices.push_back(currentVertexUp + 1);
-                        indices.push_back(currentVertexUp + 0);
-                        indices.push_back(previousVertex + increment);
+                        createTriangle(currentVertexUp + 1, currentVertexUp, previousVertex + increment);
                         currentVertexUp++;
 
                         // if we are on a corner we have 2 triangles under us so generate them
@@ -163,9 +181,7 @@ void primitive::sphere::generateIndices() const
                             {
                                 if (++vertexCounter >= i)
                                     {
-                                        indices.push_back(currentVertexUp + 1);
-                                        indices.push_back(currentVertexUp + 0);
-                                        indices.push_back(previousVertex + increment);
+                                        createTriangle(currentVertexUp + 1, currentVertexUp, previousVertex + increment);
 
                                         // We are adding another vertex so we want to increment all values pertaining to the +1 vertex
                                         // vertexCounter = 1 since this is a processed vertex
@@ -180,9 +196,7 @@ void primitive::sphere::generateIndices() const
 
                 // down triangles
                 if (i < 2) { continue; }
-                indices.push_back(totalVertexCount - 1);
-                indices.push_back(wrapVertex - 1);
-                indices.push_back(previousVertex);
+                createTriangle(totalVertexCount - 1, wrapVertex - 1, previousVertex);
 
                 vertexCounter = 1;
                 for (int j = 1; j < totalVerticesToProcess - 1; j++)
@@ -190,9 +204,7 @@ void primitive::sphere::generateIndices() const
                         // if we are not on a corner we have down-triangles associated
                         if ((vertexCounter % i) != 0)
                             {
-                                indices.push_back(wrapVertex + vertexCounter);
-                                indices.push_back(currentVertexDown + 0);
-                                indices.push_back(currentVertexDown + 1);
+                                createTriangle(wrapVertex + vertexCounter, currentVertexDown, currentVertexDown + 1);
 
                                 // We are adding another vertex so we want to increment all values pertaining to the +1 vertex
                                 // vertexCounter = 1 since this is a processed vertex
@@ -248,9 +260,7 @@ primitive::sphere::sphere()
         for (auto &vert : vertices)
             {
                 float modifier = std::sqrt(1.f / (vert.position.x * vert.position.x + vert.position.y * vert.position.y + vert.position.z * vert.position.z));
-                vert.position.x *= modifier;
-                vert.position.y *= modifier;
-                vert.position.z *= modifier;
+                vert.position *= modifier;
             }
 
 		glGenBuffers(1, &vbo);

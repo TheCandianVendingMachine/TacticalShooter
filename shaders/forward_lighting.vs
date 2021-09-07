@@ -10,19 +10,27 @@ uniform mat4 projection;
 
 uniform mat4 lightSpaceMatrix;
 
-out vec3 VertexNormal;
+out vec3 Normal;
 out vec3 FragPos;
 out vec4 FragPosLightSpace;
 out vec2 TextureCoords;
+out mat3 TBN;
 
 void main()
     {
+        vec3 bTangent = cross(aNormal, aTangent);
+
+        vec3 t = normalize(vec3(model * vec4(aTangent, 0)));
+        vec3 b = normalize(vec3(model * vec4(bTangent, 0)));
+        vec3 n = normalize(vec3(model * vec4(aNormal, 0)));
+        TBN = mat3(t, b, n);
+
         FragPos = vec3(model * vec4(aPosition, 1.0));
 
         gl_Position = projection * view * vec4(FragPos, 1.0);
 
         TextureCoords = aTextureCoords;
-        VertexNormal = aNormal;
+        Normal = aNormal;
         FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
     }  
 

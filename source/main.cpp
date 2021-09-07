@@ -75,7 +75,7 @@ int main()
 				for (int j = 0; j < 8; j++)
 					{
 						renderObject &sphere = spheres[i + 8 * j];
-						sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
+						sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
 						
 						sphere.material.albedoMap = albedo;
 						sphere.material.metallicMap = metallic;

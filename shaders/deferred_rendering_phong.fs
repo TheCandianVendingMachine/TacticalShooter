@@ -4,28 +4,35 @@ layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
 layout (location = 3) out vec3 gMetallicRoughnessAO;
 
-in vec3 VertexNormal;
 in vec3 FragPos;
-in vec4 FragPosLightSpace;
 in vec2 TextureCoords;
+in mat3 TBN;
 
 struct Material 
     {
-        sampler2D diffuse;
-        sampler2D specular;
-        float shininess;
+        sampler2D albedoMap;
+        sampler2D normalMap;
+        sampler2D metallicMap;
+        sampler2D roughnessMap;
+        sampler2D ambientOcclusionMap;
     };
 uniform Material material;
+
+vec3 calculateNormal()
+    {
+        vec3 colour = texture(material.normalMap, TextureCoords).rgb;
+        vec3 normal = colour * 2.0 - 1.0;
+        normal = normalize(TBN * normal);
+        return normal;
+    }
 
 void main()
     {
         gPosition = FragPos;
-        gNormal = VertexNormal;
-        //gAlbedo = texture(material.diffuse, TextureCoords).rgb;
         
-        gAlbedo = vec3(0.61, 0, 0);
-        
-        gMetallicRoughnessAO.r = 0.3;
-        gMetallicRoughnessAO.g = 0.1;
-        gMetallicRoughnessAO.b = 1;
+        gNormal = calculateNormal();
+        gAlbedo = texture(material.albedoMap, TextureCoords).rgb;
+        gMetallicRoughnessAO.r = texture(material.metallicMap, TextureCoords).r;
+        gMetallicRoughnessAO.g = texture(material.roughnessMap, TextureCoords).r;
+        gMetallicRoughnessAO.b = texture(material.ambientOcclusionMap, TextureCoords).r;
     }
