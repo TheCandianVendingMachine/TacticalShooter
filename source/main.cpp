@@ -3,7 +3,7 @@
 	ENGINE: Shadows
 	ENGINE: Abstracted framebuffers
 	ENGINE: Font rendering
-	ENGINE: PBR
+	ENGINE: IBL
 	ENGINE: Normal Mapping
 	ENGINE: Paralax Mapping
 	ENGINE: Bloom
