@@ -62,8 +62,11 @@ int main()
 
 		graphicsEngine graphicsEngine(app);
 
-		texture diffuse("face.png", true);
-		texture specular("face_specular.png", false);
+		texture albedo("rustediron2_basecolor.png", true);
+		texture metallic("rustediron2_metallic.png", false);
+		texture normal ("rustediron2_normal.png", true);
+		texture roughness("rustediron2_roughness.png", false);
+		texture ao("rustediron2_ao.png", false);
 
 		std::vector<renderObject> spheres(64);
 
@@ -73,8 +76,12 @@ int main()
 					{
 						renderObject &sphere = spheres[i + 8 * j];
 						sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TEXTURE);
-						sphere.diffuse = diffuse;
-						sphere.specular = specular;
+						
+						sphere.material.albedoMap = albedo;
+						sphere.material.metallicMap = metallic;
+						sphere.material.normalMap = normal;
+						sphere.material.roughnessMap = roughness;
+						sphere.material.ambientOcclusionMap = ao;
 
 						sphere.transform.position = { 0.f, 12.f - (3.f * j), 12.f - (3.f * i) };
 

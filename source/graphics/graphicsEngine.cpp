@@ -108,9 +108,11 @@ graphicsEngine::graphicsEngine(window &app) :
 		m_forwardRenderShader.setFloat("material.shininess", 128.f);
 
 		m_deferredRenderShader.use();
-		m_deferredRenderShader.setInt("material.diffuse", 0);
-		m_deferredRenderShader.setInt("material.specular", 1);
-		m_deferredRenderShader.setFloat("material.shininess", 128.f);
+		m_deferredRenderShader.setInt("material.albedoMap", 0);
+		m_deferredRenderShader.setInt("material.normalMap", 1);
+		m_deferredRenderShader.setInt("material.metallicMap", 2);
+		m_deferredRenderShader.setInt("material.roughnessMap", 3);
+		m_deferredRenderShader.setInt("material.ambientOcclusionMap", 4);
 
 		m_postProcessingShader.use();
 		m_postProcessingShader.setInt("Image", 0);
@@ -178,8 +180,11 @@ void graphicsEngine::draw(const camera &camera) const
 			{
 				m_deferredRenderShader.setMat4("model", renderObject->transform.transform());
 
-				renderObject->diffuse.bind(GL_TEXTURE0);
-				renderObject->specular.bind(GL_TEXTURE1);
+				renderObject->material.albedoMap.bind(GL_TEXTURE0);
+				renderObject->material.normalMap.bind(GL_TEXTURE1);
+				renderObject->material.metallicMap.bind(GL_TEXTURE2);
+				renderObject->material.roughnessMap.bind(GL_TEXTURE3);
+				renderObject->material.ambientOcclusionMap.bind(GL_TEXTURE4);
 
 				glBindVertexArray(renderObject->vao.vao);
 				glDrawElements(GL_TRIANGLES, renderObject->vao.indexCount, GL_UNSIGNED_INT, 0);
