@@ -4,7 +4,6 @@
 	ENGINE: Abstracted framebuffers
 	ENGINE: Font rendering
 	ENGINE: IBL
-	ENGINE: Normal Mapping
 	ENGINE: Paralax Mapping
 	ENGINE: Bloom
 	ENGINE: Billboarded Sprites
@@ -62,11 +61,11 @@ int main()
 
 		graphicsEngine graphicsEngine(app);
 
-		texture albedo("rustediron2_basecolor.png", true);
-		texture metallic("rustediron2_metallic.png", false);
-		texture normal ("rustediron2_normal.png", true);
-		texture roughness("rustediron2_roughness.png", false);
-		texture ao("rustediron2_ao.png", false);
+		texture albedo("narrow-floorboards1-albedo.png", true);
+		texture metallic("narrow-floorboards1-metallic.png", false);
+		texture normal ("narrow-floorboards1-normal.png", false);
+		texture roughness("narrow-floorboards1-roughness.png", false);
+		texture ao("narrow-floorboards1-ao.png", false);
 
 		std::vector<renderObject> spheres(64);
 
@@ -98,7 +97,7 @@ int main()
 		sp.cutoffAngleCos = glm::cos(glm::radians(5.0f));
 		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
 		sp.info.ambient = glm::vec3(0.f);
-		sp.info.diffuse = glm::vec3(100.f);
+		sp.info.diffuse = glm::vec3(10.f);
 
 		camera cam;
 		cam.position = { -5.f, 2.f, 0.f };
