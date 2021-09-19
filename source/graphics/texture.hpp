@@ -8,7 +8,7 @@ class texture
 			int m_width = 0;
 			int m_height = 0;
 			int m_channels = 0;
-			unsigned int m_id = -1;
+			unsigned int m_id = 0;
 
 		public:
 			enum class type

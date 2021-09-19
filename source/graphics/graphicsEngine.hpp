@@ -10,6 +10,7 @@
 #include "light/pointLight.hpp"
 #include "vertexArray.hpp"
 
+class mesh;
 class shader;
 class camera;
 class window;
@@ -17,6 +18,7 @@ class graphicsEngine
 	{
 		private:
 			std::vector<const renderObject*> m_renderObjects;
+			std::vector<const mesh*> m_meshes;
 
 			plf::colony<spotLight> m_spotLights;
 			plf::colony<pointLight> m_pointLights;
@@ -65,5 +67,7 @@ class graphicsEngine
 			pointLight &createPointLight();
 
 			void render(const renderObject &object);
+			void render(const mesh &mesh);
+
 			void draw(const camera &camera) const;
 	};

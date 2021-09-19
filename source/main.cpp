@@ -9,6 +9,7 @@
 	ENGINE: Billboarded Sprites
 	ENGINE: Decals
 	ENGINE: 3d mesh loader
+	ENGINE: Mesh bone animations
 	ENGINE: Multiplayer
 	ENGINE: PhysX
 	ENGINE: Game state machine
@@ -45,8 +46,12 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "graphics/mesh.hpp"
+
 int main()
 	{
+		spdlog::set_level(spdlog::level::debug);
+
 		fe::randomImpl c_generator;
 		c_generator.startUp();
 		c_generator.seed(1337);
@@ -61,36 +66,15 @@ int main()
 
 		graphicsEngine graphicsEngine(app);
 
-		texture albedo("narrow-floorboards1-albedo.png", true);
-		texture metallic("narrow-floorboards1-metallic.png", false);
-		texture normal ("narrow-floorboards1-normal.png", false);
-		texture roughness("narrow-floorboards1-roughness.png", false);
-		texture ao("narrow-floorboards1-ao.png", false);
+		mesh m;
+		m.loadFromFile("scene.gltf");
 
-		std::vector<renderObject> spheres(64);
+		graphicsEngine.render(m);
 
-		for (int i = 0; i < 8; i++)
-			{
-				for (int j = 0; j < 8; j++)
-					{
-						renderObject &sphere = spheres[i + 8 * j];
-						sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
-						
-						sphere.material.albedoMap = albedo;
-						sphere.material.metallicMap = metallic;
-						sphere.material.normalMap = normal;
-						sphere.material.roughnessMap = roughness;
-						sphere.material.ambientOcclusionMap = ao;
-
-						sphere.transform.position = { 0.f, 12.f - (3.f * j), 12.f - (3.f * i) };
-
-						graphicsEngine.render(sphere);
-					}
-			}
 
 		pointLight &pl = graphicsEngine.createPointLight();
 		pl.position = glm::vec3(-5.f, 4.f, 0.f);
-		pl.info.ambient = glm::vec3(0.001f);
+		pl.info.ambient = glm::vec3(0.1f);
 		pl.info.diffuse = glm::vec3(1.4f);
 
 		spotLight &sp = graphicsEngine.createSpotLight();

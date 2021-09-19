@@ -7,6 +7,7 @@
 #include "window.hpp"
 #include "str.hpp"
 #include "primitives.hpp"
+#include "mesh.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
@@ -161,6 +162,11 @@ void graphicsEngine::render(const renderObject &object)
 		m_renderObjects.push_back(&object);
 	}
 
+void graphicsEngine::render(const mesh &object)
+	{
+		m_meshes.push_back(&object);
+	}
+
 void graphicsEngine::draw(const camera &camera) const
 	{
 		glCullFace(GL_BACK);
@@ -188,6 +194,24 @@ void graphicsEngine::draw(const camera &camera) const
 
 				glBindVertexArray(renderObject->vao.vao);
 				glDrawElements(GL_TRIANGLES, renderObject->vao.indexCount, GL_UNSIGNED_INT, 0);
+			}
+
+		for (const auto &mesh : m_meshes) 
+			{
+				glm::mat4 transform(1.f);
+				m_deferredRenderShader.setMat4("model", transform);
+
+				glBindVertexArray(mesh->m_vertices.vao);
+				for (auto &submesh : mesh->m_subMeshes) 
+					{
+						submesh.materials.albedoMap.bind(GL_TEXTURE0);
+						submesh.materials.normalMap.bind(GL_TEXTURE1);
+						submesh.materials.metallicMap.bind(GL_TEXTURE2);
+						submesh.materials.roughnessMap.bind(GL_TEXTURE3);
+						submesh.materials.ambientOcclusionMap.bind(GL_TEXTURE4);
+
+						glDrawElements(GL_TRIANGLES, submesh.indexCount, GL_UNSIGNED_INT, reinterpret_cast<void*>(submesh.indexStartIndex));
+					}
 			}
 		/* END DEFERRED RENDERING */
 
