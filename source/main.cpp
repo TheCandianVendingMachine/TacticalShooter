@@ -22,6 +22,7 @@
 	ENGINE: Resource handler
 	ENGINE: Observer event handler
 	ENGINE: Config handler: different configs for different files - globally accessable
+	FEATURE: 3d block mesh of arbitrary size
 	FEATURE: 3d level editor
 */
 #include "graphics/window.hpp"
@@ -65,12 +66,6 @@ int main()
 		primitive::sphere c_sphere;
 
 		graphicsEngine graphicsEngine(app);
-
-		mesh m;
-		m.loadFromFile("scene.gltf");
-
-		graphicsEngine.render(m);
-
 
 		pointLight &pl = graphicsEngine.createPointLight();
 		pl.position = glm::vec3(-5.f, 4.f, 0.f);
