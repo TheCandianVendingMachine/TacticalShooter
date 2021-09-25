@@ -191,3 +191,15 @@ void window::display() const
 		glfwSwapBuffers(m_window);
 	}
 
+void window::enableCursor(bool enabled) const
+	{
+		if (enabled)
+			{
+				glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			}
+		else 
+			{
+				glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			}
+	}
+

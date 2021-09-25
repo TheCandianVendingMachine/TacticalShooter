@@ -31,4 +31,6 @@ class window : public eventSource
 			void clear(glm::vec3 color) const;
 			void draw(const vertexArray &vao) const;
 			void display() const;
+
+			void enableCursor(bool enabled) const;
 	};

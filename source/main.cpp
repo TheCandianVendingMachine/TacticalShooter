@@ -15,9 +15,9 @@
 	ENGINE: Game state machine
 	ENGINE: FMOD integration
 	ENGINE: Steam Audio
-	ENGINE: ImGui integration
 	ENGINE: Generic asset referal (hash of file in header as UID?)
 	ENGINE: ECS
+	ENGINE: Input Manager
 	ENGINE: Front end UI
 	ENGINE: Resource handler
 	ENGINE: Observer event handler
@@ -46,8 +46,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 #include "graphics/mesh.hpp"
+
 
 int main()
 	{
@@ -59,13 +63,19 @@ int main()
 
 		window app(800, 600, "Tactical Shooter Prototype");
 		glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-		glfwSetInputMode(app.getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		app.enableCursor(false);
 
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
 		primitive::sphere c_sphere;
 
 		graphicsEngine graphicsEngine(app);
+
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+
+		ImGui_ImplGlfw_InitForOpenGL(app.getWindow(), true);
+		ImGui_ImplOpenGL3_Init("#version 330");
 
 		pointLight &pl = graphicsEngine.createPointLight();
 		pl.position = glm::vec3(-5.f, 4.f, 0.f);
@@ -105,6 +115,10 @@ int main()
 					}
 				lastTime = currentTime;
 				accumulator += deltaTime;
+
+				ImGui_ImplOpenGL3_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
 
 				while (accumulator >= simulationRate)
 					{
@@ -180,11 +194,29 @@ int main()
 						sp.position = cam.position;
 						sp.direction = cam.direction;
 					}
+				
+#ifdef _DEBUG
+				if (glfwGetKey(app.getWindow(), GLFW_KEY_F1) == GLFW_PRESS)
+					{
+						
+					}
+#endif
+
+				ImGui::ShowDemoWindow();
+
+				ImGui::Render();
 
 				graphicsEngine.draw(cam);
+
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 				app.display();
 				app.pollEvents();
 			}
+
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 
 		return 0;
 	}
