@@ -82,7 +82,8 @@ void iniConfig::load(std::string_view file)
 									next = std::getc(stream);
 									if (next == ']')
 										{
-											currentSection = &m_sections.emplace(currentData, section{}).first->second;
+											m_sections.emplace(currentData, section{});
+											currentSection = &m_sections.at(currentData);
 											currentData = "";
 
 											if (currentSection == nullptr)
@@ -92,6 +93,7 @@ void iniConfig::load(std::string_view file)
 													return;
 												}
 
+											next = std::getc(stream);
 											state = readState::READING_KEY;
 										}
 									else if (next != '\n')
@@ -159,7 +161,7 @@ void iniConfig::load(std::string_view file)
 											{
 												// push data
 
-												value v = (*currentSection)[key];
+												value v;
 												v.m_value = currentData;
 
 												// attempt to infer data type for quick getting later
@@ -214,6 +216,8 @@ void iniConfig::load(std::string_view file)
 															}
 													}
 
+												(*currentSection)[key] = v;
+
 												currentData = "";
 											}
 									}
@@ -253,12 +257,12 @@ void iniConfig::save(std::string_view file) const
 		std::fclose(stream);
 	}
 
-iniConfig::section &iniConfig::operator[](const std::string& key)
+iniConfig::section &iniConfig::operator[](const std::string &key)
 	{
 		return m_sections[key];
 	}
 
-const iniConfig::section &iniConfig::operator[](const std::string& key) const
+const iniConfig::section &iniConfig::operator[](const std::string &key) const
 	{
 		if (m_sections.find(key) == m_sections.end())
 			{
@@ -267,12 +271,42 @@ const iniConfig::section &iniConfig::operator[](const std::string& key) const
 		return m_sections.at(key);
 	}
 
-iniConfig::value &iniConfig::section::operator[](const std::string& key)
+iniConfig::section::section(const section &rhs)
+	{
+		*this = rhs;
+	}
+
+iniConfig::section::section(const section &&rhs)
+	{
+		*this = std::move(rhs);
+	}
+
+iniConfig::section &iniConfig::section::operator=(const section &rhs)
+	{
+		if (&rhs != this)
+			{
+				m_keyValuePairs = rhs.m_keyValuePairs;
+			}
+
+		return *this;
+	}
+
+iniConfig::section &iniConfig::section::operator=(const section &&rhs)
+	{
+		if (&rhs != this)
+			{
+				m_keyValuePairs = std::move(rhs.m_keyValuePairs);
+			}
+
+		return *this;
+	}
+
+iniConfig::value &iniConfig::section::operator[](const std::string &key)
 	{
 		return m_keyValuePairs[key];
 	}
 
-const iniConfig::value &iniConfig::section::operator[](const std::string& key) const
+const iniConfig::value &iniConfig::section::operator[](const std::string &key) const
 	{
 		if (m_keyValuePairs.find(key) == m_keyValuePairs.end())
 			{

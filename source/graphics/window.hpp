@@ -13,10 +13,14 @@ class window : public eventSource
 			int m_width = 0;
 			int m_height = 0;
 
+			bool m_cursorEnabled = true;
+
 			friend void windowResizeCallback(GLFWwindow *app, int width, int height);
 			friend void framebufferResizeCallback(GLFWwindow *app, int width, int height);
 
 		public:
+			const bool &cursorEnabled = m_cursorEnabled;
+
 			const int &width = m_width;
 			const int &height = m_height;
 
@@ -32,5 +36,5 @@ class window : public eventSource
 			void draw(const vertexArray &vao) const;
 			void display() const;
 
-			void enableCursor(bool enabled) const;
+			void enableCursor(bool enabled);
 	};

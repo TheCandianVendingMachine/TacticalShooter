@@ -191,7 +191,7 @@ void window::display() const
 		glfwSwapBuffers(m_window);
 	}
 
-void window::enableCursor(bool enabled) const
+void window::enableCursor(bool enabled)
 	{
 		if (enabled)
 			{
@@ -201,5 +201,6 @@ void window::enableCursor(bool enabled) const
 			{
 				glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
+		m_cursorEnabled = enabled;
 	}
 

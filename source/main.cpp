@@ -17,7 +17,6 @@
 	ENGINE: Steam Audio
 	ENGINE: Generic asset referal (hash of file in header as UID?)
 	ENGINE: ECS
-	ENGINE: Input Manager
 	ENGINE: Front end UI
 	ENGINE: Resource handler
 	ENGINE: Observer event handler
@@ -41,6 +40,7 @@
 #include "clock.hpp"
 #include "time.hpp"
 #include "str.hpp"
+#include "inputHandler.hpp"
 
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
@@ -51,7 +51,6 @@
 #include "imgui_impl_opengl3.h"
 
 #include "graphics/mesh.hpp"
-
 
 int main()
 	{
@@ -64,6 +63,19 @@ int main()
 		window app(800, 600, "Tactical Shooter Prototype");
 		glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 		app.enableCursor(false);
+
+		inputHandler c_inputHandler(app.getWindow(), "inputs.ini");
+		c_inputHandler.addDefaultKey("movement", "forward", GLFW_KEY_W);
+		c_inputHandler.addDefaultKey("movement", "backward", GLFW_KEY_S);
+		c_inputHandler.addDefaultKey("movement", "left", GLFW_KEY_A);
+		c_inputHandler.addDefaultKey("movement", "right", GLFW_KEY_D);
+
+		c_inputHandler.addDefaultKey("debug", "close", GLFW_KEY_ESCAPE);
+		c_inputHandler.addDefaultKey("debug", "toggleCursor", GLFW_KEY_F1);
+
+		c_inputHandler.save("inputs.ini");
+
+		globals::g_inputs = &c_inputHandler;
 
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
@@ -102,9 +114,6 @@ int main()
 		fe::time lastTime = runClock.getTime();
 		fe::time accumulator;
 
-		bool anchorSpotlight = false;
-		bool pressed = false;
-
 		while (app.isOpen())
 			{
 				fe::time currentTime = runClock.getTime();
@@ -124,26 +133,26 @@ int main()
 					{
 						accumulator -= simulationRate;
 
-						if (glfwGetKey(app.getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
+						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("debug", "close")) == GLFW_PRESS)
 							{
 								glfwSetWindowShouldClose(app.getWindow(), true);
 							}
 
 						constexpr float speed = 10.f;
-						if (glfwGetKey(app.getWindow(), GLFW_KEY_W) == GLFW_PRESS)
+						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "forward")) == GLFW_PRESS)
 							{
 								cam.position += cam.direction * speed * (float)simulationRate.asSeconds();
 							}
-						if (glfwGetKey(app.getWindow(), GLFW_KEY_S) == GLFW_PRESS)
+						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "backward")) == GLFW_PRESS)
 							{
 								cam.position -= cam.direction * speed * (float)simulationRate.asSeconds();
 							}
 
-						if (glfwGetKey(app.getWindow(), GLFW_KEY_A) == GLFW_PRESS)
+						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "left")) == GLFW_PRESS)
 							{
 								cam.position -= glm::cross(cam.direction, cam.up) * speed * (float)simulationRate.asSeconds();
 							}
-						if (glfwGetKey(app.getWindow(), GLFW_KEY_D) == GLFW_PRESS)
+						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "right")) == GLFW_PRESS)
 							{
 								cam.position += glm::cross(cam.direction, cam.up) * speed * (float)simulationRate.asSeconds();
 							}
@@ -178,27 +187,11 @@ int main()
 
 						cam.setPitchYaw(currentPitch, currentYaw);
 					}
-
-				if (!pressed && glfwGetKey(app.getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS)
-					{
-						anchorSpotlight = !anchorSpotlight;
-						pressed = true;
-					}
-				else if (pressed && glfwGetKey(app.getWindow(), GLFW_KEY_SPACE) == GLFW_RELEASE)
-					{
-						pressed = false;
-					}
-
-				if (!anchorSpotlight) 
-					{
-						sp.position = cam.position;
-						sp.direction = cam.direction;
-					}
 				
 #ifdef _DEBUG
-				if (glfwGetKey(app.getWindow(), GLFW_KEY_F1) == GLFW_PRESS)
+				if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("debug", "toggleCursor")) == GLFW_PRESS)
 					{
-						
+						app.enableCursor(!app.cursorEnabled);
 					}
 #endif
 

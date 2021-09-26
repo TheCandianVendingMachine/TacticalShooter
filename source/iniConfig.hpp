@@ -89,11 +89,20 @@ class iniConfig
 			struct section
 				{
 					private:
-						robin_hood::unordered_map<std::string, value> m_keyValuePairs;
+						robin_hood::unordered_flat_map<std::string, value> m_keyValuePairs;
 
 						friend class iniConfig;
 
 					public:
+						const robin_hood::unordered_flat_map<std::string, value> &keyValuePairs = m_keyValuePairs;
+
+						section() = default;
+						section(const section &rhs);
+						section(const section &&rhs);
+
+						section &operator=(const section &rhs);
+						section &operator=(const section &&rhs);
+
 						value &operator[](const std::string& key);
 						const value &operator[](const std::string& key) const;
 				};
@@ -101,6 +110,7 @@ class iniConfig
 			robin_hood::unordered_map<std::string, section> m_sections;
 
 		public:
+			const robin_hood::unordered_map<std::string, section> &sections = m_sections;
 			unsigned char indentLength = 2;
 
 			iniConfig() = default;
