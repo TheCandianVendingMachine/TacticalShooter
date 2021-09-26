@@ -8,7 +8,6 @@
 	ENGINE: Bloom
 	ENGINE: Billboarded Sprites
 	ENGINE: Decals
-	ENGINE: 3d mesh loader
 	ENGINE: Mesh bone animations
 	ENGINE: Multiplayer
 	ENGINE: PhysX
