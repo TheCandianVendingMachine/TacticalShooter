@@ -167,7 +167,7 @@ void graphicsEngine::render(const mesh &object)
 		m_meshes.push_back(&object);
 	}
 
-void graphicsEngine::draw(const camera &camera) const
+void graphicsEngine::draw(const perspectiveCamera &camera) const
 	{
 		glCullFace(GL_BACK);
 

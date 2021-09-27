@@ -92,6 +92,19 @@ void editor::update()
 
 void editor::fixedUpdate(float deltaTime)
 	{
+		switch (m_activeViewport) 
+			{
+				case viewports::VIEWPORT_3D:
+					break;
+				case viewports::VIEWPORT_FRONT:
+					break;
+				case viewports::VIEWPORT_RIGHT:
+					break;
+				case viewports::VIEWPORT_TOP:
+					break;
+				default:
+					break;
+			}
 	}
 
 void editor::draw()

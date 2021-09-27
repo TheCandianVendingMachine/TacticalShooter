@@ -38,7 +38,10 @@ class editor
 					VIEWPORT_RIGHT
 				} m_activeViewport;
 
-			camera m_camera3d;
+			perspectiveCamera m_camera3d;
+			orthographicCamera m_topCamera;
+			orthographicCamera m_leftCamera;
+			orthographicCamera m_frontCamera;
 
 			window &m_window;
 

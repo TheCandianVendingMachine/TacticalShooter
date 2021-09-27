@@ -12,7 +12,7 @@
 
 class mesh;
 class shader;
-class camera;
+class perspectiveCamera;
 class window;
 class graphicsEngine
 	{
@@ -69,5 +69,5 @@ class graphicsEngine
 			void render(const renderObject &object);
 			void render(const mesh &mesh);
 
-			void draw(const camera &camera) const;
+			void draw(const perspectiveCamera &camera) const;
 	};

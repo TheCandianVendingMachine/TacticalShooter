@@ -102,7 +102,7 @@ int main()
 		sp.info.ambient = glm::vec3(0.f);
 		sp.info.diffuse = glm::vec3(10.f);
 
-		camera cam;
+		perspectiveCamera cam;
 		cam.position = { -5.f, 2.f, 0.f };
 		cam.zFar = 1000.f;
 
