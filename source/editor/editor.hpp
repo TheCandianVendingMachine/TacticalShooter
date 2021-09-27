@@ -3,6 +3,7 @@
 #pragma once
 #include <glm/vec2.hpp>
 #include "graphics/camera.hpp"
+#include "controllers/flyCameraController.hpp"
 
 class window;
 class editor
@@ -39,6 +40,8 @@ class editor
 				} m_activeViewport;
 
 			perspectiveCamera m_camera3d;
+			flyCameraController m_camera3dController;
+
 			orthographicCamera m_topCamera;
 			orthographicCamera m_leftCamera;
 			orthographicCamera m_frontCamera;

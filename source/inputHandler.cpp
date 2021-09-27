@@ -116,3 +116,10 @@ inputHandler::inputState inputHandler::keyState(int keyCode) const
 		int state = glfwGetKey(const_cast<GLFWwindow *>(m_window), keyCode);
 		return states[state];
 	}
+
+glm::vec2 inputHandler::getCursorPosition() const
+	{
+		double x, y;
+		glfwGetCursorPos(const_cast<GLFWwindow*>(m_window), &x, &y);
+		return glm::vec2(x, y);
+	}

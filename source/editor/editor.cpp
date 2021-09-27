@@ -95,6 +95,15 @@ void editor::fixedUpdate(float deltaTime)
 		switch (m_activeViewport) 
 			{
 				case viewports::VIEWPORT_3D:
+					m_camera3d.position += m_camera3dController.getDeltaPosition(
+						globals::g_inputs->keyCode("editor", "camera forward"),
+						globals::g_inputs->keyCode("editor", "camera backward"),
+						globals::g_inputs->keyCode("editor", "camera left"),
+						globals::g_inputs->keyCode("editor", "camera right"),
+						m_camera3d.direction, m_camera3d.up, deltaTime
+					);
+					glm::vec2 pitchYaw = m_camera3dController.getDeltaPitchYaw();
+					m_camera3d.setPitchYaw(m_camera3d.pitch + pitchYaw.x, m_camera3d.yaw + pitchYaw.y)
 					break;
 				case viewports::VIEWPORT_FRONT:
 					break;

@@ -1,49 +1,44 @@
 #include "flyCameraController.hpp"
 #include "inputHandler.hpp"
+#include <glm/glm.hpp>
 
-glm::vec3 flyCameraController::getDeltaPosition(float deltaTime)
+glm::vec3 flyCameraController::getDeltaPosition(int keyForward, int keyBackward, int keyLeft, int keyRight, glm::vec3 forward, glm::vec3 up, float deltaTime)
     {
-		glm::vec3 deltaPosition;
+		glm::vec3 deltaPosition = { 0, 0, 0 };
 		
-        if (globals::g_inputs->keyState("foo", "forward") == inputHandler::inputState::PRESS)
+        if (globals::g_inputs->keyState(keyForward) == inputHandler::inputState::PRESS)
 			{
-				deltaPosition += cam.direction * speed * deltaTime;
+				deltaPosition += forward * speed * deltaTime;
 			}
-		if (globals::g_inputs->keyState("foo", "backward") == inputHandler::inputState::PRESS)
+		if (globals::g_inputs->keyState(keyBackward) == inputHandler::inputState::PRESS)
 			{
-				deltaPosition -= cam.direction * speed * deltaTime;
-			}
-
-		if (globals::g_inputs->keyState("foo", "left") == inputHandler::inputState::PRESS)
-			{
-				deltaPosition -= glm::cross(cam.direction, cam.up) * speed * deltaTime;
-			}
-		if (globals::g_inputs->keyState("foo", "right") == inputHandler::inputState::PRESS)
-			{
-				deltaPosition += glm::cross(cam.direction, cam.up) * speed * deltaTime;
+				deltaPosition -= forward * speed * deltaTime;
 			}
 
-		double currentMouseX, currentMouseY;
-		glfwGetCursorPos(app.getWindow(), &currentMouseX, &currentMouseY);
+		if (globals::g_inputs->keyState(keyLeft) == inputHandler::inputState::PRESS)
+			{
+				deltaPosition -= glm::cross(forward, up) * speed * deltaTime;
+			}
+		if (globals::g_inputs->keyState(keyRight) == inputHandler::inputState::PRESS)
+			{
+				deltaPosition += glm::cross(forward, up) * speed * deltaTime;
+			}
+
+		return deltaPosition;
+    }
+
+glm::vec2 flyCameraController::getDeltaPitchYaw()
+	{
+		glm::vec2 mousePos = globals::g_inputs->getCursorPosition();
 
 		if (m_firstMouse)
 			{
-				m_lastMousePosX = currentMouseX;
-				m_lastMousePosY = currentMouseY;
+				m_lastMousePos = mousePos;
 				m_firstMouse = false;
 			}
 
-		double xDelta = (currentMouseX - m_lastMousePosX) * mouseSensitivity;
-		double yDelta = (currentMouseY - m_lastMousePosY) * mouseSensitivity;
+		glm::vec2 mouseDelta = (mousePos - m_lastMousePos) * mouseSensitivity;
+		m_lastMousePos = mousePos;
 
-		m_lastMousePosX = currentMouseX;
-		m_lastMousePosY = currentMouseY;
-
-		float currentYaw = cam.yaw;
-		float currentPitch = cam.pitch;
-
-		currentYaw += xDelta;
-		currentPitch -= yDelta;
-
-		cam.setPitchYaw(currentPitch, currentYaw);
-    }
+		return glm::vec2{ mouseDelta.x, -mouseDelta.y };
+	}

@@ -2,6 +2,7 @@
 // Allows the mapping of arbitrary keys to inputs
 #pragma once
 #include "typeDefines.hpp"
+#include <glm/vec2.hpp>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -40,6 +41,8 @@ class inputHandler
 
 			inputState keyState(std::string_view group, std::string_view keyName) const;
 			inputState keyState(int keyCode) const;
+
+			glm::vec2 getCursorPosition() const;
 	};
 
 namespace globals
