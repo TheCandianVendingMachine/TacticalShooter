@@ -50,6 +50,8 @@
 
 #include "graphics/mesh.hpp"
 
+#include "editor/editor.hpp"
+
 int main()
 	{
 		spdlog::set_level(spdlog::level::debug);
@@ -58,11 +60,13 @@ int main()
 		c_generator.startUp();
 		c_generator.seed(1337);
 
-		window app(800, 600, "Tactical Shooter Prototype");
+		window app(1280, 720, "Tactical Shooter Prototype");
 		glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-		app.enableCursor(false);
+		//app.enableCursor(false);
 
 		inputHandler c_inputHandler(app.getWindow(), "inputs.ini");
+		globals::g_inputs = &c_inputHandler;
+
 		c_inputHandler.addDefaultKey("movement", "forward", GLFW_KEY_W);
 		c_inputHandler.addDefaultKey("movement", "backward", GLFW_KEY_S);
 		c_inputHandler.addDefaultKey("movement", "left", GLFW_KEY_A);
@@ -71,9 +75,9 @@ int main()
 		c_inputHandler.addDefaultKey("debug", "close", GLFW_KEY_ESCAPE);
 		c_inputHandler.addDefaultKey("debug", "toggleCursor", GLFW_KEY_F1);
 
-		c_inputHandler.save("inputs.ini");
+		editor editor(app);
 
-		globals::g_inputs = &c_inputHandler;
+		c_inputHandler.save("inputs.ini");
 
 		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
 		primitive::plane c_plane;
@@ -127,9 +131,13 @@ int main()
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
 
+				editor.update();
+
 				while (accumulator >= simulationRate)
 					{
 						accumulator -= simulationRate;
+
+						editor.fixedUpdate(static_cast<float>(deltaTime.asSeconds()));
 
 						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("debug", "close")) == GLFW_PRESS)
 							{
@@ -193,7 +201,7 @@ int main()
 					}
 #endif
 
-				ImGui::ShowDemoWindow();
+				editor.draw();
 
 				ImGui::Render();
 

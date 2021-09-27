@@ -1,6 +1,7 @@
 #include "inputHandler.hpp"
 #include "iniConfig.hpp"
 #include "str.hpp"
+#include <GLFW/glfw3.h>
 
 inputHandler *globals::g_inputs = nullptr;
 
@@ -98,4 +99,14 @@ int inputHandler::defaultKeyCode(std::string_view group, std::string_view keyNam
 				return -1;
 			}
 		return m_defaultInputs.at(groupStr).at(keyStr);
+	}
+
+bool inputHandler::keyState(std::string_view group, std::string_view keyName) const
+	{
+		return keyState(keyCode(group, keyName));
+	}
+
+bool inputHandler::keyState(int keyCode) const
+	{
+		return glfwGetKey(const_cast<GLFWwindow*>(m_window), keyCode);
 	}

@@ -31,6 +31,9 @@ class inputHandler
 
 			int keyCode(std::string_view group, std::string_view keyName) const;
 			int defaultKeyCode(std::string_view group, std::string_view keyName) const;
+
+			bool keyState(std::string_view group, std::string_view keyName) const;
+			bool keyState(int keyCode) const;
 	};
 
 namespace globals
