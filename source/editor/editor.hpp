@@ -43,8 +43,9 @@ class editor
 			flyCameraController m_camera3dController;
 
 			orthographicCamera m_topCamera;
-			orthographicCamera m_leftCamera;
+			orthographicCamera m_rightCamera;
 			orthographicCamera m_frontCamera;
+			flyCameraController m_orthographicController;
 
 			window &m_window;
 

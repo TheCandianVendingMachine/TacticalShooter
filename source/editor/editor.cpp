@@ -3,6 +3,7 @@
 #include "graphics/window.hpp"
 #include <GLFW/glfw3.h>
 #include <imgui.h>
+#include <spdlog/spdlog.h>
 
 void editor::initKeybinds()
 	{
@@ -14,23 +15,37 @@ void editor::initKeybinds()
 
 void editor::drawLeftPanel()
 	{
+		ImGui::Text("Left");
 	}
 
 void editor::drawRightPanel()
 	{
+		ImGui::Text("Right");
 	}
 
 void editor::drawTopPanel()
 	{
+		ImGui::Text("Top");
 	}
 
 void editor::drawBottomPanel()
 	{
+		ImGui::Text("Bottom");
 	}
 
 void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 	{
 		const glm::vec2 extent = (bottomRight - topLeft) / 2.f;
+		m_camera3d.aspectRatio = extent.y / extent.x;
+
+		m_topCamera.left = { 0, 0 };
+		m_topCamera.right = extent;
+
+		m_frontCamera.left = { 0, 0 };
+		m_frontCamera.right = extent;
+		
+		m_rightCamera.left = { 0, 0 };
+		m_rightCamera.right = extent;
 
 		// 4 viewports: 3d, top, right, front
 		if ((m_mode & mode::DRAW_4_EDITORS) == mode::DRAW_4_EDITORS) 
@@ -75,7 +90,10 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 				ImGui::SetWindowSize({ extent.x * 2.f, extent.y * 2.f });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
-				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_3D; }
+				if (ImGui::IsItemActive()) 
+					{
+						m_activeViewport = viewports::VIEWPORT_3D;
+					}
 
 				ImGui::End();
 			}
@@ -84,6 +102,10 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 editor::editor(window &window) : m_window(window)
 	{
 		initKeybinds();
+
+		m_topCamera.setPitchYaw(90.f, 0.f);
+		m_frontCamera.setPitchYaw(0.f, 0.f);
+		m_rightCamera.setPitchYaw(0.f, 90.f);
 	}
 
 void editor::update()
@@ -92,24 +114,38 @@ void editor::update()
 
 void editor::fixedUpdate(float deltaTime)
 	{
+		const int forwardKeyCode = globals::g_inputs->keyCode("editor", "camera forward");
+		const int backwardKeyCode = globals::g_inputs->keyCode("editor", "camera backward");
+		const int leftKeyCode = globals::g_inputs->keyCode("editor", "camera left");
+		const int rightKeyCode = globals::g_inputs->keyCode("editor", "camera right");
+
 		switch (m_activeViewport) 
 			{
 				case viewports::VIEWPORT_3D:
 					m_camera3d.position += m_camera3dController.getDeltaPosition(
-						globals::g_inputs->keyCode("editor", "camera forward"),
-						globals::g_inputs->keyCode("editor", "camera backward"),
-						globals::g_inputs->keyCode("editor", "camera left"),
-						globals::g_inputs->keyCode("editor", "camera right"),
+						forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
 						m_camera3d.direction, m_camera3d.up, deltaTime
 					);
 					glm::vec2 pitchYaw = m_camera3dController.getDeltaPitchYaw();
-					m_camera3d.setPitchYaw(m_camera3d.pitch + pitchYaw.x, m_camera3d.yaw + pitchYaw.y)
+					m_camera3d.setPitchYaw(m_camera3d.pitch + pitchYaw.x, m_camera3d.yaw + pitchYaw.y);
 					break;
 				case viewports::VIEWPORT_FRONT:
+					m_frontCamera.position += m_orthographicController.getDeltaPosition(
+						forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
+						m_frontCamera.direction, m_frontCamera.up, deltaTime
+					);
 					break;
 				case viewports::VIEWPORT_RIGHT:
+					m_rightCamera.position += m_orthographicController.getDeltaPosition(
+						forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
+						m_rightCamera.direction, m_rightCamera.up, deltaTime
+					);
 					break;
 				case viewports::VIEWPORT_TOP:
+					m_topCamera.position += m_orthographicController.getDeltaPosition(
+						forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
+						m_topCamera.direction, m_topCamera.up, deltaTime
+					);
 					break;
 				default:
 					break;
@@ -161,7 +197,7 @@ void editor::draw()
 		ImGui::SetWindowSize({ totalSize.x * m_topPanelSize.x, totalSize.y * m_topPanelSize.y });
 		ImGui::SetWindowPos({ 0, barSize.y });
 
-		drawRightPanel();
+		drawTopPanel();
 
 		ImGui::End();
 
@@ -169,11 +205,11 @@ void editor::draw()
 		ImGui::SetWindowSize({ totalSize.x * m_bottomPanelSize.x, totalSize.y * m_bottomPanelSize.y });
 		ImGui::SetWindowPos({ 0, barSize.y + totalSize.y - totalSize.y * m_bottomPanelSize.y });
 
-		drawRightPanel();
-
-		drawEditorViewports({ totalSize.x * m_leftPanelSize.x, barSize.y + totalSize.y * m_topPanelSize.y }, { totalSize.x - totalSize.x * m_rightPanelSize.x, barSize.y + totalSize.y - totalSize.y * m_bottomPanelSize.y });
+		drawBottomPanel();
 
 		ImGui::End();
+
+		drawEditorViewports({ totalSize.x * m_leftPanelSize.x, barSize.y + totalSize.y * m_topPanelSize.y }, { totalSize.x - totalSize.x * m_rightPanelSize.x, barSize.y + totalSize.y - totalSize.y * m_bottomPanelSize.y });
 	}
 
 editor::mode operator|(const editor::mode &lhs, const editor::mode &rhs)

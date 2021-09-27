@@ -204,3 +204,8 @@ void window::enableCursor(bool enabled)
 		m_cursorEnabled = enabled;
 	}
 
+void window::close()
+	{
+		glfwSetWindowShouldClose(m_window, true);
+	}
+

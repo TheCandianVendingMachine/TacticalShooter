@@ -91,25 +91,6 @@ int main()
 		ImGui_ImplGlfw_InitForOpenGL(app.getWindow(), true);
 		ImGui_ImplOpenGL3_Init("#version 330");
 
-		pointLight &pl = graphicsEngine.createPointLight();
-		pl.position = glm::vec3(-5.f, 4.f, 0.f);
-		pl.info.ambient = glm::vec3(0.1f);
-		pl.info.diffuse = glm::vec3(1.4f);
-
-		spotLight &sp = graphicsEngine.createSpotLight();
-		sp.cutoffAngleCos = glm::cos(glm::radians(5.0f));
-		sp.outerCutoffAngleCos = glm::cos(glm::radians(15.f));
-		sp.info.ambient = glm::vec3(0.f);
-		sp.info.diffuse = glm::vec3(10.f);
-
-		perspectiveCamera cam;
-		cam.position = { -5.f, 2.f, 0.f };
-		cam.zFar = 1000.f;
-
-		app.subscribe(FE_STR("framebufferResize"), [&cam] (message &m) {
-			cam.aspectRatio = static_cast<float>(m.arguments[0].variable.INT) / static_cast<float>(m.arguments[1].variable.INT);
-		});
-
 		constexpr fe::time simulationRate = fe::seconds(1.f / 60.f);
 		constexpr fe::time maxDeltaTime = fe::seconds(3);
 		fe::clock runClock;
@@ -131,6 +112,11 @@ int main()
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
 
+				if (globals::g_inputs->keyState("debug", "close") == inputHandler::inputState::PRESS)
+					{
+						app.close();
+					}
+
 				editor.update();
 
 				while (accumulator >= simulationRate)
@@ -138,74 +124,11 @@ int main()
 						accumulator -= simulationRate;
 
 						editor.fixedUpdate(static_cast<float>(deltaTime.asSeconds()));
-
-						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("debug", "close")) == GLFW_PRESS)
-							{
-								glfwSetWindowShouldClose(app.getWindow(), true);
-							}
-
-						constexpr float speed = 10.f;
-						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "forward")) == GLFW_PRESS)
-							{
-								cam.position += cam.direction * speed * (float)simulationRate.asSeconds();
-							}
-						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "backward")) == GLFW_PRESS)
-							{
-								cam.position -= cam.direction * speed * (float)simulationRate.asSeconds();
-							}
-
-						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "left")) == GLFW_PRESS)
-							{
-								cam.position -= glm::cross(cam.direction, cam.up) * speed * (float)simulationRate.asSeconds();
-							}
-						if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("movement", "right")) == GLFW_PRESS)
-							{
-								cam.position += glm::cross(cam.direction, cam.up) * speed * (float)simulationRate.asSeconds();
-							}
-
-						constexpr double sensitivity = 0.1f;
-
-						static bool firstMouse = true;
-						static double lastMouseX = 400;
-						static double lastMouseY = 300;
-
-						double currentMouseX, currentMouseY;
-						glfwGetCursorPos(app.getWindow(), &currentMouseX, &currentMouseY);
-
-						if (firstMouse)
-							{
-								lastMouseX = currentMouseX;
-								lastMouseY = currentMouseY;
-								firstMouse = false;
-							}
-
-						double xDelta = (currentMouseX - lastMouseX) * sensitivity;
-						double yDelta = (currentMouseY - lastMouseY) * sensitivity;
-
-						lastMouseX = currentMouseX;
-						lastMouseY = currentMouseY;
-
-						float currentYaw = cam.yaw;
-						float currentPitch = cam.pitch;
-
-						currentYaw += xDelta;
-						currentPitch -= yDelta;
-
-						cam.setPitchYaw(currentPitch, currentYaw);
 					}
-				
-#ifdef _DEBUG
-				if (glfwGetKey(app.getWindow(), globals::g_inputs->keyCode("debug", "toggleCursor")) == GLFW_PRESS)
-					{
-						app.enableCursor(!app.cursorEnabled);
-					}
-#endif
 
 				editor.draw();
 
 				ImGui::Render();
-
-				graphicsEngine.draw(cam);
 
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

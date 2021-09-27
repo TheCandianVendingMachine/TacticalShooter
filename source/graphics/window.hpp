@@ -37,4 +37,5 @@ class window : public eventSource
 			void display() const;
 
 			void enableCursor(bool enabled);
+			void close();
 	};
