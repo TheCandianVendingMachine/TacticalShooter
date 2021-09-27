@@ -69,5 +69,5 @@ class graphicsEngine
 			void render(const renderObject &object);
 			void render(const mesh &mesh);
 
-			void draw(const perspectiveCamera &camera) const;
+			void draw(const perspectiveCamera &camera, unsigned int texture = 0) const;
 	};

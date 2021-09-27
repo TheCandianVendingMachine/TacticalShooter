@@ -167,7 +167,7 @@ void graphicsEngine::render(const mesh &object)
 		m_meshes.push_back(&object);
 	}
 
-void graphicsEngine::draw(const perspectiveCamera &camera) const
+void graphicsEngine::draw(const perspectiveCamera &camera, unsigned int texture) const
 	{
 		glCullFace(GL_BACK);
 
@@ -331,7 +331,7 @@ void graphicsEngine::draw(const perspectiveCamera &camera) const
 
 		/* BEGIN POST PROCESSING */
 		glDisable(GL_CULL_FACE);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, texture);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -344,6 +344,8 @@ void graphicsEngine::draw(const perspectiveCamera &camera) const
 		glBindVertexArray(m_quadVAO.vao);
 		glDrawElements(GL_TRIANGLES, m_quadVAO.indexCount, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glEnable(GL_CULL_FACE);
 		/* END POST PROCESSING */
 	}

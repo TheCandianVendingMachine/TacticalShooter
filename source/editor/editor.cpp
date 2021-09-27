@@ -1,6 +1,8 @@
 #include "editor.hpp"
 #include "inputHandler.hpp"
 #include "graphics/window.hpp"
+#include "graphics/graphicsEngine.hpp"
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
@@ -33,6 +35,22 @@ void editor::drawBottomPanel()
 		ImGui::Text("Bottom");
 	}
 
+void editor::drawViewportFramebuffer(glm::vec2 extent, unsigned int texture)
+	{
+		ImVec2 origin = ImGui::GetCursorScreenPos();
+		ImVec2 offset = {
+			origin.x + extent.x,
+			origin.y + extent.y
+		};
+
+		ImDrawList *list = ImGui::GetWindowDrawList();
+		list->AddImage(
+			reinterpret_cast<void*>(texture),
+			origin,
+			offset
+		);
+	}
+
 void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 	{
 		const glm::vec2 extent = (bottomRight - topLeft) / 2.f;
@@ -47,16 +65,25 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 		m_rightCamera.left = { 0, 0 };
 		m_rightCamera.right = extent;
 
+		m_activeViewport = viewports::NONE;
+
 		// 4 viewports: 3d, top, right, front
 		if ((m_mode & mode::DRAW_4_EDITORS) == mode::DRAW_4_EDITORS) 
 			{
-				m_activeViewport = viewports::NONE;
+				if (m_swappedViewportMode)
+					{
+						generateFramebuffers(extent);
+						m_swappedViewportMode = false;
+					}
 
 				ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 				ImGui::SetWindowSize({ extent.x, extent.y });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_3D; }
+
+				drawViewportFramebuffer(extent, m_3dFramebufferColour);
+				ImGui::Text("3d View");
 
 				ImGui::End();
 
@@ -86,26 +113,70 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 			}
 		else
 			{
+				if (m_swappedViewportMode)
+					{
+						generateFramebuffers(extent * 2.f);
+						m_swappedViewportMode = false;
+					}
+
 				ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 				ImGui::SetWindowSize({ extent.x * 2.f, extent.y * 2.f });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
-				if (ImGui::IsItemActive()) 
-					{
-						m_activeViewport = viewports::VIEWPORT_3D;
-					}
+				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_3D; }
+
+				drawViewportFramebuffer(extent * 2.f, m_3dFramebufferColour);
+				ImGui::Text("3d View");
 
 				ImGui::End();
 			}
 	}
 
-editor::editor(window &window) : m_window(window)
+void editor::generateFramebuffers(glm::vec2 extent)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, m_3dFramebuffer);
+
+		glGenTextures(1, &m_3dFramebufferColour);
+		glBindTexture(GL_TEXTURE_2D, m_3dFramebufferColour);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, extent.x, extent.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_3dFramebufferColour, 0);
+	
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			{
+				spdlog::error("[Editor] Framebuffer is not while generating attachments");
+			}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+editor::editor(window &window, graphicsEngine &engine3d) : 
+	m_window(window),
+	m_3dEngine(engine3d)
 	{
 		initKeybinds();
 
 		m_topCamera.setPitchYaw(90.f, 0.f);
 		m_frontCamera.setPitchYaw(0.f, 0.f);
 		m_rightCamera.setPitchYaw(0.f, 90.f);
+
+		glGenFramebuffers(1, &m_3dFramebuffer);
+		if (glCheckFramebufferStatus(m_3dFramebuffer) != GL_FRAMEBUFFER_COMPLETE)
+			{
+				spdlog::error("[Editor] Could not generate framebuffer");
+			}
+
+		generateFramebuffers({1, 1});
+		m_swappedViewportMode = true;
+	}
+
+editor::~editor()
+	{
+		glDeleteFramebuffers(1, &m_3dFramebuffer);
 	}
 
 void editor::update()
@@ -168,6 +239,7 @@ void editor::draw()
 				if (ImGui::Checkbox("4 Editor Viewports", &editor4Viewports))
 					{
 						m_mode ^= mode::DRAW_4_EDITORS;
+						m_swappedViewportMode = true;
 					}
 
 				ImGui::EndMenu();
@@ -209,6 +281,7 @@ void editor::draw()
 
 		ImGui::End();
 
+		m_3dEngine.draw(m_camera3d, m_3dFramebuffer);
 		drawEditorViewports({ totalSize.x * m_leftPanelSize.x, barSize.y + totalSize.y * m_topPanelSize.y }, { totalSize.x - totalSize.x * m_rightPanelSize.x, barSize.y + totalSize.y - totalSize.y * m_bottomPanelSize.y });
 	}
 

@@ -6,6 +6,7 @@
 #include "controllers/flyCameraController.hpp"
 
 class window;
+class graphicsEngine;
 class editor
 	{
 		private:
@@ -47,7 +48,13 @@ class editor
 			orthographicCamera m_frontCamera;
 			flyCameraController m_orthographicController;
 
+			unsigned int m_3dFramebuffer = 0;
+			unsigned int m_3dFramebufferColour = 0;
+
+			bool m_swappedViewportMode = false;
+
 			window &m_window;
+			graphicsEngine &m_3dEngine;
 
 			void initKeybinds();
 
@@ -56,12 +63,16 @@ class editor
 			void drawTopPanel();
 			void drawBottomPanel();
 
+			void drawViewportFramebuffer(glm::vec2 extent, unsigned int texture);
 			void drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight);
+
+			void generateFramebuffers(glm::vec2 extent);
 
 		public:
 			bool enabled = true;
 
-			editor(window &window);
+			editor(window &window, graphicsEngine &engine3d);
+			~editor();
 
 			void update();
 			void fixedUpdate(float deltaTime);

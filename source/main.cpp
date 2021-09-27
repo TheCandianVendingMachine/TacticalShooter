@@ -62,7 +62,12 @@ int main()
 
 		window app(1280, 720, "Tactical Shooter Prototype");
 		glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-		//app.enableCursor(false);
+
+		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
+		primitive::plane c_plane;
+		primitive::sphere c_sphere;
+
+		graphicsEngine graphicsEngine(app);
 
 		inputHandler c_inputHandler(app.getWindow(), "inputs.ini");
 		globals::g_inputs = &c_inputHandler;
@@ -75,15 +80,9 @@ int main()
 		c_inputHandler.addDefaultKey("debug", "close", GLFW_KEY_ESCAPE);
 		c_inputHandler.addDefaultKey("debug", "toggleCursor", GLFW_KEY_F1);
 
-		editor editor(app);
+		editor editor(app, graphicsEngine);
 
 		c_inputHandler.save("inputs.ini");
-
-		// generate all primitives onto stack. Needs to be called after OpenGL initialisation
-		primitive::plane c_plane;
-		primitive::sphere c_sphere;
-
-		graphicsEngine graphicsEngine(app);
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
