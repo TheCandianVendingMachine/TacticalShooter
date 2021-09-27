@@ -6,8 +6,13 @@
 class flyCameraController
     {
         private:
+            bool m_firstMouse = true;
+            double m_lastMousePosX = 0.0;
+            double m_lastMousePosY = 0.0;
+
         public:
             float speed = 10.f;
+            float mouseSensitivity = 0.1f;
 
-            glm::vec3 getDeltaPosition();
+            glm::vec3 getDeltaPosition(float deltaTime);
     };

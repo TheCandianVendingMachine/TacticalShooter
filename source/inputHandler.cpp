@@ -101,12 +101,18 @@ int inputHandler::defaultKeyCode(std::string_view group, std::string_view keyNam
 		return m_defaultInputs.at(groupStr).at(keyStr);
 	}
 
-bool inputHandler::keyState(std::string_view group, std::string_view keyName) const
+inputHandler::inputState inputHandler::keyState(std::string_view group, std::string_view keyName) const
 	{
 		return keyState(keyCode(group, keyName));
 	}
 
-bool inputHandler::keyState(int keyCode) const
+inputHandler::inputState inputHandler::keyState(int keyCode) const
 	{
-		return glfwGetKey(const_cast<GLFWwindow*>(m_window), keyCode);
+		constexpr inputState states[2] = {
+			inputState::RELEASE,
+			inputState::PRESS
+		};
+
+		int state = glfwGetKey(const_cast<GLFWwindow *>(m_window), keyCode);
+		return states[state];
 	}

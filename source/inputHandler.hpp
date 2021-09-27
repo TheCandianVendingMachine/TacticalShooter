@@ -20,6 +20,12 @@ class inputHandler
 			robin_hood::unordered_map<fe::str, robin_hood::unordered_map<fe::str, int>> m_inputs;
 
 		public:
+			enum class inputState
+				{
+					RELEASE,
+					PRESS,
+				};
+
 			inputHandler(GLFWwindow *window);
 			inputHandler(GLFWwindow *window, const char *inputFilePath);
 
@@ -32,8 +38,8 @@ class inputHandler
 			int keyCode(std::string_view group, std::string_view keyName) const;
 			int defaultKeyCode(std::string_view group, std::string_view keyName) const;
 
-			bool keyState(std::string_view group, std::string_view keyName) const;
-			bool keyState(int keyCode) const;
+			inputState keyState(std::string_view group, std::string_view keyName) const;
+			inputState keyState(int keyCode) const;
 	};
 
 namespace globals
