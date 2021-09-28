@@ -12,6 +12,10 @@
 	FEATURE: Billboard representations of lights
 	FEATURE: Billboard representations of sound emitters
 	FEATURE: Dragging blocks as structures
+	FEATURE: Represent camera in orthographic views
+	FEATURE: Entity placement
+	FEATURE: Object properties and meta-data about objects/entities
+	FEATURE: Saving/Loading
 */
 
 void editor::initKeybinds()
@@ -103,6 +107,8 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_TOP; }
 
+				ImGui::Text("Top view");
+
 				ImGui::End();
 
 				ImGui::Begin("#editor right", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
@@ -111,6 +117,8 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_RIGHT; }
 
+				ImGui::Text("Right view");
+
 				ImGui::End();
 
 				ImGui::Begin("#editor front", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
@@ -118,6 +126,8 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 				ImGui::SetWindowPos({ topLeft.x + extent.x, topLeft.y + extent.y });
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_FRONT; }
+
+				ImGui::Text("Front view");
 
 				ImGui::End();
 			}
