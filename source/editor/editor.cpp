@@ -8,6 +8,12 @@
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
+/*
+	FEATURE: Billboard representations of lights
+	FEATURE: Billboard representations of sound emitters
+	FEATURE: Dragging blocks as structures
+*/
+
 void editor::initKeybinds()
 	{
 		globals::g_inputs->addDefaultKey("editor", "camera forward", GLFW_KEY_W);
