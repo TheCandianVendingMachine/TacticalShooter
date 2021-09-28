@@ -51,8 +51,6 @@ class editor
 			unsigned int m_3dFramebuffer = 0;
 			unsigned int m_3dFramebufferColour = 0;
 
-			bool m_swappedViewportMode = false;
-
 			window &m_window;
 			graphicsEngine &m_3dEngine;
 

@@ -71,12 +71,6 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 		// 4 viewports: 3d, top, right, front
 		if ((m_mode & mode::DRAW_4_EDITORS) == mode::DRAW_4_EDITORS) 
 			{
-				if (m_swappedViewportMode)
-					{
-						generateFramebuffers(extent * 2.f);
-						m_swappedViewportMode = false;
-					}
-
 				ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 				ImGui::SetWindowSize({ extent.x, extent.y });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
@@ -123,12 +117,6 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 			}
 		else
 			{
-				if (m_swappedViewportMode)
-					{
-						generateFramebuffers(extent * 2.f);
-						m_swappedViewportMode = false;
-					}
-
 				ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 				ImGui::SetWindowSize({ extent.x * 2.f, extent.y * 2.f });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
@@ -190,11 +178,10 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 			}
 		glGenTextures(1, &m_3dFramebufferColour);
 
-		generateFramebuffers({1, 1});
-		m_swappedViewportMode = true;
+		generateFramebuffers({ m_window.width, m_window.height });
 
 		m_window.subscribe(FE_STR("framebufferResize"), [this] (message &event) {
-			m_swappedViewportMode = true;
+			generateFramebuffers({ event.arguments[0].variable.INT, event.arguments[1].variable.INT });
 		});
 	}
 
@@ -263,7 +250,6 @@ void editor::draw()
 				if (ImGui::Checkbox("4 Editor Viewports", &editor4Viewports))
 					{
 						m_mode ^= mode::DRAW_4_EDITORS;
-						m_swappedViewportMode = true;
 					}
 
 				ImGui::EndMenu();
