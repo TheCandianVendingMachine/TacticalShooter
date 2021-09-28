@@ -1,5 +1,6 @@
 #include "editor.hpp"
 #include "inputHandler.hpp"
+#include "str.hpp"
 #include "graphics/window.hpp"
 #include "graphics/graphicsEngine.hpp"
 #include "glad/glad.h"
@@ -54,7 +55,7 @@ void editor::drawViewportFramebuffer(glm::vec2 extent, unsigned int texture)
 void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 	{
 		const glm::vec2 extent = (bottomRight - topLeft) / 2.f;
-		m_camera3d.aspectRatio = extent.y / extent.x;
+		m_camera3d.aspectRatio = extent.x / extent.y;
 
 		m_topCamera.left = { 0, 0 };
 		m_topCamera.right = extent;
@@ -72,7 +73,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 			{
 				if (m_swappedViewportMode)
 					{
-						generateFramebuffers(extent);
+						generateFramebuffers(extent * 2.f);
 						m_swappedViewportMode = false;
 					}
 
@@ -80,7 +81,16 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 				ImGui::SetWindowSize({ extent.x, extent.y });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
-				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_3D; }
+				if (ImGui::IsItemActive()) 
+					{
+						m_window.enableCursor(false);
+						m_activeViewport = viewports::VIEWPORT_3D;
+					}
+				else
+					{
+						m_window.enableCursor(true);
+						m_camera3dController.resetMouse();
+					}
 
 				drawViewportFramebuffer(extent, m_3dFramebufferColour);
 				ImGui::Text("3d View");
@@ -123,7 +133,16 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 				ImGui::SetWindowSize({ extent.x * 2.f, extent.y * 2.f });
 				ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
-				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_3D; }
+				if (ImGui::IsItemActive()) 
+					{
+						m_window.enableCursor(false);
+						m_activeViewport = viewports::VIEWPORT_3D;
+					}
+				else
+					{
+						m_window.enableCursor(true);
+						m_camera3dController.resetMouse();
+					}
 
 				drawViewportFramebuffer(extent * 2.f, m_3dFramebufferColour);
 				ImGui::Text("3d View");
@@ -135,8 +154,6 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 void editor::generateFramebuffers(glm::vec2 extent)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_3dFramebuffer);
-
-		glGenTextures(1, &m_3dFramebufferColour);
 		glBindTexture(GL_TEXTURE_2D, m_3dFramebufferColour);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, extent.x, extent.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -148,7 +165,7 @@ void editor::generateFramebuffers(glm::vec2 extent)
 	
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
-				spdlog::error("[Editor] Framebuffer is not while generating attachments");
+				spdlog::error("[Editor] Framebuffer is not complete while generating attachments");
 			}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -160,6 +177,8 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 	{
 		initKeybinds();
 
+		m_camera3d.setPitchYaw(0.f, 0.f);
+
 		m_topCamera.setPitchYaw(90.f, 0.f);
 		m_frontCamera.setPitchYaw(0.f, 0.f);
 		m_rightCamera.setPitchYaw(0.f, 90.f);
@@ -169,9 +188,14 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 			{
 				spdlog::error("[Editor] Could not generate framebuffer");
 			}
+		glGenTextures(1, &m_3dFramebufferColour);
 
 		generateFramebuffers({1, 1});
 		m_swappedViewportMode = true;
+
+		m_window.subscribe(FE_STR("framebufferResize"), [this] (message &event) {
+			m_swappedViewportMode = true;
+		});
 	}
 
 editor::~editor()

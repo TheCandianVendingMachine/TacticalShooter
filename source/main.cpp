@@ -84,6 +84,27 @@ int main()
 
 		c_inputHandler.save("inputs.ini");
 
+		texture albedo("rustediron2_basecolor.png", true);
+		texture metallic("rustediron2_metallic.png", false);
+		texture normal("rustediron2_normal.png", true);
+		texture roughness("rustediron2_roughness.png", false);
+		texture ao("rustediron2_ao.png", false);
+
+		renderObject sphere;
+		sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
+		sphere.material.albedoMap = albedo;
+		sphere.material.metallicMap = metallic;
+		sphere.material.normalMap = normal;
+		sphere.material.roughnessMap = roughness;
+		sphere.material.ambientOcclusionMap = ao;
+
+		graphicsEngine.render(sphere);
+
+		pointLight &pl = graphicsEngine.createPointLight();
+		pl.position = glm::vec3(-5.f, 4.f, 0.f);
+		pl.info.ambient = glm::vec3(0.001f);
+		pl.info.diffuse = glm::vec3(1.4f);
+
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 

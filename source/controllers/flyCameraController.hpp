@@ -14,6 +14,8 @@ class flyCameraController
             float speed = 10.f;
             float mouseSensitivity = 0.1f;
 
+            void resetMouse();
+
             glm::vec3 getDeltaPosition(int keyForward, int keyBackward, int keyLeft, int keyRight, glm::vec3 forward, glm::vec3 up, float deltaTime);
             glm::vec2 getDeltaPitchYaw();
     };
