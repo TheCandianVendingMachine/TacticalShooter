@@ -3,6 +3,8 @@
 #pragma once
 #include <glm/vec2.hpp>
 #include "graphics/camera.hpp"
+#include "graphics/vertexArray.hpp"
+#include "graphics/shader.hpp"
 #include "controllers/flyCameraController.hpp"
 
 class window;
@@ -50,6 +52,12 @@ class editor
 
 			unsigned int m_3dFramebuffer = 0;
 			unsigned int m_3dFramebufferColour = 0;
+
+			vertexArray m_grid;
+			shader m_gridShader;
+
+			unsigned int m_gridFramebuffer = 0;
+			unsigned int m_gridFramebufferColour = 0;
 
 			window &m_window;
 			graphicsEngine &m_3dEngine;

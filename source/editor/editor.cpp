@@ -3,7 +3,9 @@
 #include "str.hpp"
 #include "graphics/window.hpp"
 #include "graphics/graphicsEngine.hpp"
+#include "graphics/vertex.hpp"
 #include "glad/glad.h"
+#include <vector>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
@@ -107,6 +109,19 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_TOP; }
 
+				glBindFramebuffer(GL_FRAMEBUFFER, m_gridFramebuffer);
+				glClear(GL_COLOR_BUFFER_BIT);
+
+				m_gridShader.use();
+
+				glBindVertexArray(m_grid.vao);
+				glDrawArrays(GL_LINES, 0, m_grid.vertexCount);
+				glBindVertexArray(0);
+				
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+				drawViewportFramebuffer(extent, m_gridFramebufferColour);
+
 				ImGui::Text("Top view");
 
 				ImGui::End();
@@ -177,7 +192,8 @@ void editor::generateFramebuffers(glm::vec2 extent)
 
 editor::editor(window &window, graphicsEngine &engine3d) : 
 	m_window(window),
-	m_3dEngine(engine3d)
+	m_3dEngine(engine3d),
+	m_gridShader("shaders/editor_2d_grid.vs", "shaders/editor_2d_grid.fs")
 	{
 		initKeybinds();
 
@@ -190,7 +206,7 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 		glGenFramebuffers(1, &m_3dFramebuffer);
 		if (glCheckFramebufferStatus(m_3dFramebuffer) != GL_FRAMEBUFFER_COMPLETE)
 			{
-				spdlog::error("[Editor] Could not generate framebuffer");
+				spdlog::error("[Editor (3d)] Could not generate framebuffer");
 			}
 		glGenTextures(1, &m_3dFramebufferColour);
 
@@ -199,6 +215,48 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 		m_window.subscribe(FE_STR("framebufferResize"), [this] (message &event) {
 			generateFramebuffers({ event.arguments[0].variable.INT, event.arguments[1].variable.INT });
 		});
+
+		std::vector<vertex> vertices;
+		for (int i = 0; i < 12; i++)
+			{
+				// evenly spread out grid lines over range of [-1-c, 1+c]
+				// x = ((x + max) % (2 * max)) - max
+				float x = static_cast<float>(2 * i - 11) / 9.f;
+
+				vertex v0;
+				v0.position = { x, -1.f, 0.f };
+
+				vertex v1;
+				v1.position = { x, 1.f, 0.f };
+
+				vertices.push_back(std::move(v0));
+				vertices.push_back(std::move(v1));
+			}
+		m_grid.bindVertices(vertices);
+		m_grid.use(vertex::attributes::POSITION | vertex::attributes::COLOUR);
+
+		glGenFramebuffers(1, &m_gridFramebuffer);
+		if (glCheckFramebufferStatus(m_gridFramebuffer) != GL_FRAMEBUFFER_COMPLETE)
+			{
+				spdlog::error("[Editor (Grid)] Could not generate framebuffer");
+			}
+		glGenTextures(1, &m_gridFramebufferColour);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_gridFramebuffer);
+		glBindTexture(GL_TEXTURE_2D, m_gridFramebufferColour);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 500, 500, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gridFramebufferColour, 0);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			{
+				spdlog::error("[Editor (Grid)] Framebuffer is not complete while generating attachments");
+			}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 editor::~editor()
