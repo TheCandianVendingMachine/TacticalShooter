@@ -109,7 +109,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_TOP; }
 
-				drawViewportFramebuffer(extent, m_gridFramebufferColour);
+				drawViewportFramebuffer(extent, m_topFramebufferColour);
 
 				ImGui::Text("Top view");
 
@@ -121,6 +121,8 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_RIGHT; }
 
+				drawViewportFramebuffer(extent, m_rightFramebufferColour);
+
 				ImGui::Text("Right view");
 
 				ImGui::End();
@@ -130,6 +132,8 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 				ImGui::SetWindowPos({ topLeft.x + extent.x, topLeft.y + extent.y });
 
 				if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_FRONT; }
+
+				drawViewportFramebuffer(extent, m_frontFramebufferColour);
 
 				ImGui::Text("Front view");
 
@@ -178,22 +182,33 @@ void editor::generateFramebuffers(glm::vec2 extent)
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_gridFramebuffer);
-		glBindTexture(GL_TEXTURE_2D, m_gridFramebufferColour);
+		unsigned int frameBuffers[3] = {
+			m_frontFramebuffer, m_topFramebuffer, m_rightFramebuffer
+		};
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, extent.x, extent.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		unsigned int frameBufferColours[3] = {
+			m_frontFramebufferColour, m_topFramebufferColour, m_rightFramebufferColour
+		};
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gridFramebufferColour, 0);
-
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		for (int i = 0; i < 3; i++) 
 			{
-				spdlog::error("[Editor (Grid)] Framebuffer is not complete while generating attachments");
-			}
+				glBindFramebuffer(GL_FRAMEBUFFER, frameBuffers[i]);
+				glBindTexture(GL_TEXTURE_2D, frameBufferColours[i]);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, extent.x, extent.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBufferColours[i], 0);
+
+				if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+					{
+						spdlog::error("[Editor (Grid)] Framebuffer is not complete while generating attachments");
+					}
+
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			}
 	}
 
 editor::editor(window &window, graphicsEngine &engine3d) : 
@@ -216,13 +231,27 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 			}
 		glGenTextures(1, &m_3dFramebufferColour);
 
-		glGenFramebuffers(1, &m_gridFramebuffer);
-		if (glCheckFramebufferStatus(m_gridFramebuffer) != GL_FRAMEBUFFER_COMPLETE)
-			{
-				spdlog::error("[Editor (Grid)] Could not generate framebuffer");
-			}
-		glGenTextures(1, &m_gridFramebufferColour);
+		unsigned int fbs[3];
+		glGenFramebuffers(3, fbs);
 
+		unsigned int colours[3];
+		glGenTextures(3, colours);
+
+		m_frontFramebuffer = fbs[0];
+		m_rightFramebuffer = fbs[1];
+		m_topFramebuffer = fbs[2];
+
+		m_frontFramebufferColour = colours[0];
+		m_rightFramebufferColour = colours[1];
+		m_topFramebufferColour = colours[2];
+
+		for (int i = 0; i < 3; i++)
+			{
+				if (glCheckFramebufferStatus(fbs[i]) != GL_FRAMEBUFFER_COMPLETE)
+					{
+						spdlog::error("[Editor (Grid)] Could not generate framebuffer");
+					}
+			}
 		generateFramebuffers({ m_window.width, m_window.height });
 
 		m_window.subscribe(FE_STR("framebufferResize"), [this](message &event) {
@@ -232,7 +261,21 @@ editor::editor(window &window, graphicsEngine &engine3d) :
 
 editor::~editor()
 	{
-		glDeleteFramebuffers(1, &m_3dFramebuffer);
+		unsigned int framebuffers[4] = {
+			m_3dFramebuffer,
+			m_topFramebuffer,
+			m_rightFramebuffer,
+			m_frontFramebuffer
+		};
+		glDeleteFramebuffers(4, framebuffers);
+
+		unsigned int textures[4] = {
+			m_3dFramebufferColour,
+			m_topFramebufferColour,
+			m_rightFramebufferColour,
+			m_frontFramebufferColour
+		};
+		glDeleteTextures(4, textures);
 	}
 
 void editor::update()

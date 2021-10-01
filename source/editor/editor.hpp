@@ -56,8 +56,14 @@ class editor
 			vertexArray m_grid;
 			shader m_gridShader;
 
-			unsigned int m_gridFramebuffer = 0;
-			unsigned int m_gridFramebufferColour = 0;
+			unsigned int m_topFramebuffer = 0;
+			unsigned int m_topFramebufferColour = 0;
+
+			unsigned int m_rightFramebuffer = 0;
+			unsigned int m_rightFramebufferColour = 0;
+
+			unsigned int m_frontFramebuffer = 0;
+			unsigned int m_frontFramebufferColour = 0;
 
 			window &m_window;
 			graphicsEngine &m_3dEngine;
