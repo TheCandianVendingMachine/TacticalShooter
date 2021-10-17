@@ -78,16 +78,16 @@ void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 		switch (severity)
 			{
 				case GL_DEBUG_SEVERITY_HIGH:
-					spdlog::error("OpenGL Error [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
+					spdlog::error("OpenGL Error [HIGH] [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
 					break;
 				case GL_DEBUG_SEVERITY_MEDIUM:
-					spdlog::error("OpenGL Error [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
+					spdlog::error("OpenGL Error [MEDIUM] [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
 					break;
 				case GL_DEBUG_SEVERITY_LOW:
-					spdlog::warn("OpenGL Warning [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
+					spdlog::warn("OpenGL Warning [LOW] [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
 					break;
 				case GL_DEBUG_SEVERITY_NOTIFICATION:
-					spdlog::info("OpenGL Information [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
+					//spdlog::info("OpenGL Information [Source: {} | Type: {}]: {}", sourceStrings[sourceIndex], typeStrings[typeIndex], message);
 					break;
 				default:
 					break;

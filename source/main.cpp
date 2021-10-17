@@ -52,9 +52,130 @@
 
 #include "editor/editor.hpp"
 
+#include <PxPhysicsAPI.h>
+
+class allocatorCallback : public physx::PxAllocatorCallback
+	{
+		public:
+			virtual void *allocate(size_t size, const char *typeName, const char *filename, int line) override final
+				{
+					return malloc(size);
+				}
+
+			virtual void deallocate(void *ptr) override final
+				{
+					free(ptr);
+				}
+	};
+
+class errorCallback : public physx::PxErrorCallback
+	{
+		public:
+			virtual void reportError(physx::PxErrorCode::Enum code, const char *message, const char *file, int line) override final
+				{
+					switch (code)
+						{
+							case physx::PxErrorCode::eNO_ERROR:
+								break;
+							case physx::PxErrorCode::eDEBUG_INFO:
+								break;
+							case physx::PxErrorCode::eDEBUG_WARNING:
+								spdlog::warn(message);
+								break;
+							case physx::PxErrorCode::eINVALID_PARAMETER:
+								spdlog::warn(message);
+								break;
+							case physx::PxErrorCode::eINVALID_OPERATION:
+								spdlog::warn(message);
+								break;
+							case physx::PxErrorCode::eOUT_OF_MEMORY:
+								spdlog::error(message);
+								break;
+							case physx::PxErrorCode::eINTERNAL_ERROR:
+								spdlog::error(message);
+								break;
+							case physx::PxErrorCode::eABORT:
+								spdlog::error(message);
+								break;
+							case physx::PxErrorCode::ePERF_WARNING:
+								spdlog::warn(message);
+								break;
+							default:
+								break;
+						}
+				}
+	};
+
+class cpuDispatcher : public physx::PxCpuDispatcher 
+	{
+		public:
+			virtual void submitTask(physx::PxBaseTask &task) override final
+				{
+					task.run();
+					task.release();
+				}
+
+			virtual uint32_t getWorkerCount() const override final
+				{
+					return 0;
+				}
+	};
+
+physx::PxFilterFlags SampleSubmarineFilterShader(
+    physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
+    physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1,
+    physx::PxPairFlags& pairFlags, const void* constantBlock, physx::PxU32 constantBlockSize)
+    {
+        // let triggers through
+        if(physx::PxFilterObjectIsTrigger(attributes0) || physx::PxFilterObjectIsTrigger(attributes1))
+            {
+                pairFlags = physx::PxPairFlag::eTRIGGER_DEFAULT;
+                return physx::PxFilterFlag::eDEFAULT;
+            }
+        // generate contacts for all that were not filtered above
+        pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT | physx::PxPairFlag::eNOTIFY_CONTACT_POINTS;
+
+        return physx::PxFilterFlag::eDEFAULT;
+    }
+
 int main()
 	{
 		spdlog::set_level(spdlog::level::debug);
+
+		errorCallback defaultErrorCallback;
+		allocatorCallback defaultAllocatorCallback;
+
+		physx::PxFoundation *foundation = PxCreateFoundation(PX_PHYSICS_VERSION, defaultAllocatorCallback, defaultErrorCallback);
+		if (!foundation)
+			{
+				spdlog::error("PhysX Foundation creation failed");
+				return -1;
+			}
+
+		physx::PxTolerancesScale tolerance;
+		tolerance.length = 1;
+		tolerance.speed = 9.81;
+		physx::PxPhysics *physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, tolerance, true);
+		if (!physics)
+			{
+				spdlog::error("Could not create physics");
+				return -1;
+			}
+
+		physx::PxSceneDesc sceneDescription(physics->getTolerancesScale());
+		sceneDescription.gravity = physx::PxVec3(0, 9.81f, 0.f);
+		sceneDescription.broadPhaseType = physx::PxBroadPhaseType::eSAP;
+
+		cpuDispatcher dispatcher;
+		sceneDescription.cpuDispatcher = &dispatcher;
+		sceneDescription.filterShader = SampleSubmarineFilterShader;
+
+		physx::PxScene *scene = physics->createScene(sceneDescription);
+		if (!scene)
+			{
+				spdlog::error("Could not create scene");
+				return -1;
+			}
 
 		fe::randomImpl c_generator;
 		c_generator.startUp();
@@ -100,9 +221,42 @@ int main()
 
 		graphicsEngine.render(sphere);
 
+		renderObject plane;
+		plane.vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
+		plane.material.albedoMap = albedo;
+		plane.material.metallicMap = metallic;
+		plane.material.normalMap = normal;
+		plane.material.roughnessMap = roughness;
+		plane.material.ambientOcclusionMap = ao;
+
+		plane.transform.position = { 0, 5.f, 0 };
+		plane.transform.scale = { 50.f, 0.f, 50.f };
+
+		graphicsEngine.render(plane);
+
+		physx::PxMaterial *mat = physics->createMaterial(0.3f, 0.1f, 0.2f);
+
+		physx::PxTransform planeTransform(physx::PxVec3(0, 5.f, 0), physx::PxQuat(physx::PxHalfPi, { 0, 0, -1 }));
+		physx::PxRigidStatic *planeActor = physics->createRigidStatic(planeTransform);
+		physx::PxShape *planeShape = physics->createShape(physx::PxPlaneGeometry(), *mat);
+		planeShape->setFlag(physx::PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+		planeShape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
+		planeActor->attachShape(*planeShape);
+
+		physx::PxTransform sphereTransform({ 0, 0, 0 });
+		physx::PxRigidDynamic *sphereActor = physics->createRigidDynamic(sphereTransform);
+		sphereActor->setMass(1.f);
+		physx::PxShape *sphereShape = physics->createShape(physx::PxSphereGeometry(1.f), *mat);
+		sphereShape->setFlag(physx::PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+		sphereShape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
+		sphereActor->attachShape(*sphereShape);
+
+		scene->addActor(*planeActor);
+		scene->addActor(*sphereActor);
+
 		pointLight &pl = graphicsEngine.createPointLight();
 		pl.position = glm::vec3(-5.f, 4.f, 0.f);
-		pl.info.ambient = glm::vec3(0.001f);
+		pl.info.ambient = glm::vec3(0.1f);
 		pl.info.diffuse = glm::vec3(1.4f);
 
 		IMGUI_CHECKVERSION();
@@ -143,8 +297,16 @@ int main()
 					{
 						accumulator -= simulationRate;
 
+						scene->simulate(deltaTime.asSeconds());
+						scene->fetchResults(true);
+
 						editor.fixedUpdate(static_cast<float>(deltaTime.asSeconds()));
 					}
+
+				physx::PxTransform t = sphereActor->getGlobalPose();
+				sphere.transform.position = {
+					t.p.x, t.p.y, t.p.z
+				};
 
 				editor.draw();
 
@@ -159,6 +321,10 @@ int main()
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+
+		scene->release();
+		physics->release();
+		foundation->release();
 
 		return 0;
 	}
