@@ -5,7 +5,7 @@
 #include "light.hpp"
 
 struct directionalLight
-	{
-		glm::vec3 direction = { 0, -1, 0 };
-		light info;
-	};
+    {
+        glm::vec3 direction = { 0, -1, 0 };
+        light info;
+    };

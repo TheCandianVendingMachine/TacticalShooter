@@ -5,7 +5,7 @@
 #include "light.hpp"
 
 struct pointLight
-	{
-		glm::vec3 position;
-		light info;
-	};
+    {
+        glm::vec3 position;
+        light info;
+    };

@@ -15,59 +15,59 @@ class shader;
 class perspectiveCamera;
 class window;
 class graphicsEngine
-	{
-		private:
-			std::vector<const renderObject*> m_renderObjects;
-			std::vector<const mesh*> m_meshes;
+    {
+        private:
+            std::vector<const renderObject*> m_renderObjects;
+            std::vector<const mesh*> m_meshes;
 
-			plf::colony<spotLight> m_spotLights;
-			plf::colony<pointLight> m_pointLights;
+            plf::colony<spotLight> m_spotLights;
+            plf::colony<pointLight> m_pointLights;
 
-			shader m_forwardRenderShader;
+            shader m_forwardRenderShader;
 
-			shader m_deferredRenderShader;
-			shader m_deferredLightingShader;
-			shader m_lightDebugShader;
+            shader m_deferredRenderShader;
+            shader m_deferredLightingShader;
+            shader m_lightDebugShader;
 
-			shader m_postProcessingShader;
+            shader m_postProcessingShader;
 
-			vertexArray m_quadVAO;
+            vertexArray m_quadVAO;
 
-			vertexArray m_pointLightVAO;
-			vertexArray m_directionalLightVAO;
+            vertexArray m_pointLightVAO;
+            vertexArray m_directionalLightVAO;
 
-			// deferred rendering
-			unsigned int m_deferredFramebuffer = 0;
+            // deferred rendering
+            unsigned int m_deferredFramebuffer = 0;
 
-			unsigned int m_gDepth = 0;
+            unsigned int m_gDepth = 0;
 
-			unsigned int m_gPosition = 0;
-			unsigned int m_gNormal = 0;
-			unsigned int m_gAlbedo = 0;
-			unsigned int m_gMetallicRoughnessAO = 0;
+            unsigned int m_gPosition = 0;
+            unsigned int m_gNormal = 0;
+            unsigned int m_gAlbedo = 0;
+            unsigned int m_gMetallicRoughnessAO = 0;
 
-			// post processing
-			unsigned int m_ppFramebuffer = 0;
-			unsigned int m_ppRenderTexture = 0;
-			unsigned int m_ppDepth = 0;
+            // post processing
+            unsigned int m_ppFramebuffer = 0;
+            unsigned int m_ppRenderTexture = 0;
+            unsigned int m_ppDepth = 0;
 
-			unsigned int m_screenWidth = 0;
-			unsigned int m_screenHeight = 0;
+            unsigned int m_screenWidth = 0;
+            unsigned int m_screenHeight = 0;
 
-			bool m_debugDrawLight = false;
+            bool m_debugDrawLight = false;
 
-			void createFramebuffers();
+            void createFramebuffers();
 
-		public:
-			directionalLight directionalLight;
+        public:
+            directionalLight directionalLight;
 
-			graphicsEngine(window &app);
+            graphicsEngine(window &app);
 
-			spotLight &createSpotLight();
-			pointLight &createPointLight();
+            spotLight &createSpotLight();
+            pointLight &createPointLight();
 
-			void render(const renderObject &object);
-			void render(const mesh &mesh);
+            void render(const renderObject &object);
+            void render(const mesh &mesh);
 
-			void draw(const perspectiveCamera &camera, unsigned int texture = 0) const;
-	};
+            void draw(const perspectiveCamera &camera, unsigned int texture = 0) const;
+    };

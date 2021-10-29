@@ -10,49 +10,49 @@ unsigned int primitive::plane::vbo = 0;
 unsigned int primitive::plane::ebo = 0;
 
 void primitive::plane::bind(unsigned int vao)
-	{
-		glBindVertexArray(vao);
+    {
+        glBindVertexArray(vao);
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(), GL_STATIC_DRAW);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-		glBindVertexArray(0);
-	}
+        glBindVertexArray(0);
+    }
 
 primitive::plane::plane()
-	{
-		glm::vec3 p0(-1.f, 0.f, -1.f);
-		glm::vec3 p1( 1.f, 0.f, -1.f);
-		glm::vec3 p2( 1.f, 0.f,  1.f);
-		glm::vec3 p3(-1.f, 0.f,  1.f);
+    {
+        glm::vec3 p0(-1.f, 0.f, -1.f);
+        glm::vec3 p1( 1.f, 0.f, -1.f);
+        glm::vec3 p2( 1.f, 0.f,  1.f);
+        glm::vec3 p3(-1.f, 0.f,  1.f);
 
-		glm::vec2 uv0(0.f, 0.f);
-		glm::vec2 uv1(0.f, 1.f);
-		glm::vec2 uv2(1.f, 1.f);
-		glm::vec2 uv3(1.f, 0.f);
+        glm::vec2 uv0(0.f, 0.f);
+        glm::vec2 uv1(0.f, 1.f);
+        glm::vec2 uv2(1.f, 1.f);
+        glm::vec2 uv3(1.f, 0.f);
 
-		glm::vec3 nm(0.f, 1.f, 0.f);
+        glm::vec3 nm(0.f, 1.f, 0.f);
 
-		indices = { 2, 3, 0, 0, 1, 2 };
-		vertices = {
-			vertex{ p0, nm, { 0.f, 0.f, 1.f }, uv0, { 1.f, 1.f, 1.f } },
-			vertex{ p1, nm, { 0.f, 0.f, 1.f }, uv1, { 1.f, 1.f, 1.f } },
-			vertex{ p2, nm, { 0.f, 0.f, 1.f }, uv2, { 1.f, 1.f, 1.f } },
-			vertex{ p3, nm, { 0.f, 0.f, 1.f }, uv3, { 1.f, 1.f, 1.f } },
-		};
+        indices = { 2, 3, 0, 0, 1, 2 };
+        vertices = {
+            vertex{ p0, nm, { 0.f, 0.f, 1.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p1, nm, { 0.f, 0.f, 1.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p2, nm, { 0.f, 0.f, 1.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p3, nm, { 0.f, 0.f, 1.f }, uv3, { 1.f, 1.f, 1.f } },
+        };
 
-		glGenBuffers(1, &vbo);
-		glGenBuffers(1, &ebo);
-	}
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+    }
 
 primitive::plane::~plane()
-	{
-		glDeleteBuffers(1, &vbo);
-		glDeleteBuffers(1, &ebo);
-	}
+    {
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
+    }
 
 std::vector<unsigned int> primitive::sphere::indices = {};
 std::vector<vertex> primitive::sphere::vertices = {};
@@ -61,17 +61,17 @@ unsigned int primitive::sphere::vbo = 0;
 unsigned int primitive::sphere::ebo = 0;
 
 void primitive::sphere::bind(unsigned int vao)
-	{
-		glBindVertexArray(vao);
+    {
+        glBindVertexArray(vao);
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(), GL_STATIC_DRAW);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-		glBindVertexArray(0);
-	}
+        glBindVertexArray(0);
+    }
 
 void primitive::sphere::generateVertices() const
     {
@@ -152,7 +152,7 @@ void primitive::sphere::generateIndices() const
             v1.tangent.z = f * (dUV2.y * edge1.z - dUV1.y * edge2.z);
         };
 
-		int currentVertexUp = 1;
+        int currentVertexUp = 1;
         int currentVertexDown = 1;
         for (int i = 1; i <= c_resolution; i++)
             {
@@ -217,7 +217,7 @@ void primitive::sphere::generateIndices() const
     }
 
 primitive::sphere::sphere()
-	{
+    {
         // A procedural sphere shape with alright control over vertex count
         // The sphere is created by first creating an octahedron through triangles subdivided along the edges as vertices
         // The vertices are then transformed to be distance 1 away from the centre
@@ -226,7 +226,7 @@ primitive::sphere::sphere()
         constexpr int totalVertexCount = (2 * c_resolution) * (c_resolution + 1) + 1;
 
         // we generate half the sphere with this function and then mirror the other half
-		generateVertices();
+        generateVertices();
         generateIndices();
 
         std::vector<vertex> mirroredVertices(vertices.begin(), vertices.end() - totalVerticesForLastRow);
@@ -263,12 +263,12 @@ primitive::sphere::sphere()
                 vert.position *= modifier;
             }
 
-		glGenBuffers(1, &vbo);
-		glGenBuffers(1, &ebo);
-	}
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+    }
 
 primitive::sphere::~sphere()
-	{
-		glDeleteBuffers(1, &vbo);
-		glDeleteBuffers(1, &ebo);
-	}
+    {
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
+    }

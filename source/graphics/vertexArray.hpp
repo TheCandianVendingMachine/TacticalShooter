@@ -5,37 +5,37 @@
 #include "vertex.hpp"
 
 class vertexArray
-	{
-		private:
-			unsigned int m_vao = 0;
-			unsigned int m_vbo = 0;
-			unsigned int m_ebo = 0;
+    {
+        private:
+            unsigned int m_vao = 0;
+            unsigned int m_vbo = 0;
+            unsigned int m_ebo = 0;
 
-			bool m_ownBuffers = false;
+            bool m_ownBuffers = false;
 
-			unsigned int m_indexCount = 0;
-			unsigned int m_vertexCount = 0;
+            unsigned int m_indexCount = 0;
+            unsigned int m_vertexCount = 0;
 
-		public:
-			const unsigned int &vao = m_vao;
-			const unsigned int &vbo = m_vbo;
-			const unsigned int &ebo = m_ebo;
+        public:
+            const unsigned int &vao = m_vao;
+            const unsigned int &vbo = m_vbo;
+            const unsigned int &ebo = m_ebo;
 
-			const unsigned int &vertexCount = m_vertexCount;
-			const unsigned int &indexCount = m_indexCount;
+            const unsigned int &vertexCount = m_vertexCount;
+            const unsigned int &indexCount = m_indexCount;
 
-			vertexArray();
-			vertexArray(const vertexArray &rhs);
-			~vertexArray();
+            vertexArray();
+            vertexArray(const vertexArray &rhs);
+            ~vertexArray();
 
-			vertexArray &operator=(const vertexArray &rhs);
+            vertexArray &operator=(const vertexArray &rhs);
 
-			void bindVertices(const std::vector<vertex> &vertices);
-			void bindVertices(unsigned int vbo, unsigned int vertexCount);
+            void bindVertices(const std::vector<vertex> &vertices);
+            void bindVertices(unsigned int vbo, unsigned int vertexCount);
 
-			void bindIndices(const std::vector<unsigned int> &indices);
-			void bindIndices(unsigned int ebo, unsigned int indexCount);
+            void bindIndices(const std::vector<unsigned int> &indices);
+            void bindIndices(unsigned int ebo, unsigned int indexCount);
 
-			void use(vertex::attributes attributes) const;
+            void use(vertex::attributes attributes) const;
 
-	};
+    };

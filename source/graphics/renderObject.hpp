@@ -6,9 +6,9 @@
 #include "material.hpp"
 
 struct renderObject
-	{
-		material material;
-		vertexArray vao;
-		transformable transform;
-	};
+    {
+        material material;
+        vertexArray vao;
+        transformable transform;
+    };
 
