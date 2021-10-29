@@ -52,66 +52,13 @@
 
 #include "editor/editor.hpp"
 
-#include <PxPhysicsAPI.h>
-#include "physics/physxErrorCallback.hpp"
-#include "physics/physxCPUDispatcher.hpp"
-#include "physics/physxAllocator.hpp"
-
-physx::PxFilterFlags SampleSubmarineFilterShader(
-    physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
-    physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1,
-    physx::PxPairFlags& pairFlags, const void* constantBlock, physx::PxU32 constantBlockSize)
-    {
-        // let triggers through
-        if(physx::PxFilterObjectIsTrigger(attributes0) || physx::PxFilterObjectIsTrigger(attributes1))
-            {
-                pairFlags = physx::PxPairFlag::eTRIGGER_DEFAULT;
-                return physx::PxFilterFlag::eDEFAULT;
-            }
-        // generate contacts for all that were not filtered above
-        pairFlags = physx::PxPairFlag::eCONTACT_DEFAULT | physx::PxPairFlag::eNOTIFY_CONTACT_POINTS;
-
-        return physx::PxFilterFlag::eDEFAULT;
-    }
+#include "physics/physicsWorld.hpp"
 
 int main()
     {
         spdlog::set_level(spdlog::level::debug);
-
-        physxErrorCallback defaultErrorCallback;
-        physxAllocator defaultAllocatorCallback;
-        physxCPUDispatcher dispatcher;
-
-        physx::PxFoundation *foundation = PxCreateFoundation(PX_PHYSICS_VERSION, defaultAllocatorCallback, defaultErrorCallback);
-        if (!foundation)
-            {
-                spdlog::error("PhysX Foundation creation failed");
-                return -1;
-            }
-
-        physx::PxTolerancesScale tolerance;
-        tolerance.length = 1;
-        tolerance.speed = 9.81;
-        physx::PxPhysics *physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, tolerance, true);
-        if (!physics)
-            {
-                spdlog::error("Could not create physics");
-                return -1;
-            }
-
-        physx::PxSceneDesc sceneDescription(physics->getTolerancesScale());
-        sceneDescription.gravity = physx::PxVec3(0, 9.81f, 0.f);
-        sceneDescription.broadPhaseType = physx::PxBroadPhaseType::eSAP;
-
-        sceneDescription.cpuDispatcher = &dispatcher;
-        sceneDescription.filterShader = SampleSubmarineFilterShader;
-
-        physx::PxScene *scene = physics->createScene(sceneDescription);
-        if (!scene)
-            {
-                spdlog::error("Could not create scene");
-                return -1;
-            }
+        
+        physicsWorld physics;
 
         fe::randomImpl c_generator;
         c_generator.startUp();
@@ -170,25 +117,11 @@ int main()
 
         graphicsEngine.render(plane);
 
-        physx::PxMaterial *mat = physics->createMaterial(0.3f, 0.1f, 0.9f);
+        rigidBody &sphereBody = physics.createBody(physicsWorld::rigidType::DYNAMIC, rigidBody::types::SPHERE);
+        rigidBody &planeBody = physics.createBody(physicsWorld::rigidType::STATIC, rigidBody::types::PLANE, physx::PxTransform(physx::PxVec3(0, 5.f, 0), physx::PxQuat(physx::PxHalfPi, { 0, 0, -1 })));
 
-        physx::PxTransform planeTransform(physx::PxVec3(0, 5.f, 0), physx::PxQuat(physx::PxHalfPi, { 0, 0, -1 }));
-        physx::PxRigidStatic *planeActor = physics->createRigidStatic(planeTransform);
-        physx::PxShape *planeShape = physics->createShape(physx::PxPlaneGeometry(), *mat);
-        planeShape->setFlag(physx::PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-        planeShape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
-        planeActor->attachShape(*planeShape);
-
-        physx::PxTransform sphereTransform({ 0, 0, 0 });
-        physx::PxRigidDynamic *sphereActor = physics->createRigidDynamic(sphereTransform);
-        sphereActor->setMass(1.f);
-        physx::PxShape *sphereShape = physics->createShape(physx::PxSphereGeometry(1.f), *mat);
-        sphereShape->setFlag(physx::PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-        sphereShape->setFlag(physx::PxShapeFlag::eSIMULATION_SHAPE, true);
-        sphereActor->attachShape(*sphereShape);
-
-        scene->addActor(*planeActor);
-        scene->addActor(*sphereActor);
+        physics.addToScene(sphereBody);
+        physics.addToScene(planeBody);
 
         pointLight &pl = graphicsEngine.createPointLight();
         pl.position = glm::vec3(-5.f, 4.f, 0.f);
@@ -233,13 +166,12 @@ int main()
                     {
                         accumulator -= simulationRate;
 
-                        scene->simulate(deltaTime.asSeconds());
-                        scene->fetchResults(true);
+                        physics.fixedUpdate(deltaTime.asSeconds());
 
                         editor.fixedUpdate(static_cast<float>(deltaTime.asSeconds()));
                     }
 
-                physx::PxTransform t = sphereActor->getGlobalPose();
+                physx::PxTransform t = sphereBody.actor->getGlobalPose();
                 sphere.transform.position = {
                     t.p.x, t.p.y, t.p.z
                 };
@@ -257,10 +189,6 @@ int main()
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
-
-        scene->release();
-        physics->release();
-        foundation->release();
 
         return 0;
     }
