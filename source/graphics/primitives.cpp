@@ -272,3 +272,95 @@ primitive::sphere::~sphere()
         glDeleteBuffers(1, &vbo);
         glDeleteBuffers(1, &ebo);
     }
+
+std::vector<unsigned int> primitive::cube::indices = {};
+std::vector<vertex> primitive::cube::vertices = {};
+
+unsigned int primitive::cube::vbo = 0;
+unsigned int primitive::cube::ebo = 0;
+
+void primitive::cube::bind(unsigned int vao)
+    {
+        glBindVertexArray(vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertex), vertices.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+        glBindVertexArray(0);
+    }
+
+primitive::cube::cube()
+    {
+        glm::vec3 p0 = {  0.5,  0.5,  0.5 };
+        glm::vec3 p1 = { -0.5,  0.5,  0.5 };
+        glm::vec3 p2 = { -0.5,  0.5, -0.5 };
+        glm::vec3 p3 = {  0.5,  0.5, -0.5 };
+
+        glm::vec3 p4 = {  0.5, -0.5,  0.5 };
+        glm::vec3 p5 = { -0.5, -0.5,  0.5 };
+        glm::vec3 p6 = { -0.5, -0.5, -0.5 };
+        glm::vec3 p7 = {  0.5, -0.5, -0.5 };
+
+        glm::vec2 uv0(0.f, 0.f);
+        glm::vec2 uv1(0.f, 1.f);
+        glm::vec2 uv2(1.f, 1.f);
+        glm::vec2 uv3(1.f, 0.f);
+
+        indices = {
+            0  + 2,  0 + 1,  0 + 0,  0 + 0,  0 + 3,  0 + 2,
+            4  + 2,  4 + 3,  4 + 0,  4 + 0,  4 + 1,  4 + 2,
+            8  + 2,  8 + 3,  8 + 0,  8 + 0,  8 + 1,  8 + 2,
+            12 + 2, 12 + 1, 12 + 0, 12 + 0, 12 + 3, 12 + 2,
+            16 + 2, 16 + 3, 16 + 0, 16 + 0, 16 + 1, 16 + 2,
+            20 + 2, 20 + 1, 20 + 0, 20 + 0, 20 + 3, 20 + 2,
+        };
+        vertices = {
+            // Bottom face
+            vertex{ p0, {  0.f, -1.f,  0.f }, {  0.f,  0.f,  1.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p1, {  0.f, -1.f,  0.f }, {  0.f,  0.f,  1.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p2, {  0.f, -1.f,  0.f }, {  0.f,  0.f,  1.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p3, {  0.f, -1.f,  0.f }, {  0.f,  0.f,  1.f }, uv3, { 1.f, 1.f, 1.f } },
+
+            // Top face
+            vertex{ p4, {  0.f,  1.f,  0.f }, {  0.f,  0.f,  1.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p5, {  0.f,  1.f,  0.f }, {  0.f,  0.f,  1.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p6, {  0.f,  1.f,  0.f }, {  0.f,  0.f,  1.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p7, {  0.f,  1.f,  0.f }, {  0.f,  0.f,  1.f }, uv3, { 1.f, 1.f, 1.f } },
+
+            // Back face
+            vertex{ p0, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p1, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p5, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p4, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, uv3, { 1.f, 1.f, 1.f } },
+
+            // Front face
+            vertex{ p3, {  0.f,  0.f,  1.f }, {  0.f, -1.f,  0.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p2, {  0.f,  0.f,  1.f }, {  0.f, -1.f,  0.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p6, {  0.f,  0.f,  1.f }, {  0.f, -1.f,  0.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p7, {  0.f,  0.f,  1.f }, {  0.f, -1.f,  0.f }, uv3, { 1.f, 1.f, 1.f } },
+
+            // Left face
+            vertex{ p4, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p7, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p3, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p0, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv3, { 1.f, 1.f, 1.f } },
+
+            // Right face
+            vertex{ p5, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv0, { 1.f, 1.f, 1.f } },
+            vertex{ p6, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv1, { 1.f, 1.f, 1.f } },
+            vertex{ p2, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv2, { 1.f, 1.f, 1.f } },
+            vertex{ p1, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, uv3, { 1.f, 1.f, 1.f } },
+        };
+
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+    }
+
+primitive::cube::~cube()
+    {
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ebo);
+    }

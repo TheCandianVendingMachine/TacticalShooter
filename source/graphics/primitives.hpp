@@ -15,6 +15,7 @@ namespace primitive
                     generator() = default;
                     friend class plane;
                     friend class sphere;
+                    friend class cube;
 
                     [[nodiscard]] static vertexArray generate(vertex::attributes attributes = vertex::attributes::NONE)
                         {
@@ -80,5 +81,25 @@ namespace primitive
                     ~sphere();
 
                     using generator<sphere>::generate;
+            };
+
+        class cube : public generator<cube>
+            {
+                private:
+                    friend class generator<cube>;
+
+                    static unsigned int vbo;
+                    static unsigned int ebo;
+
+                    static std::vector<unsigned int> indices;
+                    static std::vector<vertex> vertices;
+
+                    static void bind(unsigned int vao);
+
+                public:
+                    cube();
+                    ~cube();
+
+                    using generator<cube>::generate;
             };
     }

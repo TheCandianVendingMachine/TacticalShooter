@@ -70,6 +70,7 @@ int main()
         // generate all primitives onto stack. Needs to be called after OpenGL initialisation
         primitive::plane c_plane;
         primitive::sphere c_sphere;
+        primitive::cube c_cube;
 
         graphicsEngine graphicsEngine(app);
 
@@ -116,6 +117,18 @@ int main()
         plane.transform.scale = { 50.f, 0.f, 50.f };
 
         graphicsEngine.render(plane);
+
+        renderObject cube;
+        cube.vao = primitive::cube::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
+        cube.material.albedoMap = albedo;
+        cube.material.metallicMap = metallic;
+        cube.material.normalMap = normal;
+        cube.material.roughnessMap = roughness;
+        cube.material.ambientOcclusionMap = ao;
+
+        cube.transform.position = { 2.f, 3.f, 0 };
+
+        graphicsEngine.render(cube);
 
         rigidBody &sphereBody = physics.createBody(physicsWorld::rigidType::DYNAMIC, rigidBody::types::SPHERE);
         rigidBody &planeBody = physics.createBody(physicsWorld::rigidType::STATIC, rigidBody::types::PLANE, physx::PxTransform(physx::PxVec3(0, 5.f, 0), physx::PxQuat(physx::PxHalfPi, { 0, 0, -1 })));
