@@ -19,7 +19,6 @@
     ENGINE: Front end UI
     ENGINE: Resource handler
     ENGINE: Observer event handler
-    FEATURE: 3d block mesh of arbitrary size
     FEATURE: 3d level editor
 */
 #include "graphics/window.hpp"
