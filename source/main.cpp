@@ -53,6 +53,12 @@
 
 #include "physics/physicsWorld.hpp"
 
+#include "ecs/graphicsSystem.hpp"
+#include "ecs/physicsSystem.hpp"
+#include "ecs/graphicsComponent.hpp"
+#include "ecs/physicsComponent.hpp"
+#include "ecs/entity.hpp"
+
 int main()
     {
         spdlog::set_level(spdlog::level::debug);
@@ -72,6 +78,9 @@ int main()
         primitive::cube c_cube;
 
         graphicsEngine graphicsEngine(app);
+
+        physicsSystem ecsPhysics(physics);
+        graphicsSystem ecsGraphics(graphicsEngine);
 
         inputHandler c_inputHandler(app.getWindow(), "inputs.ini");
         globals::g_inputs = &c_inputHandler;
@@ -94,46 +103,56 @@ int main()
         texture roughness("rustediron2_roughness.png", false);
         texture ao("rustediron2_ao.png", false);
 
-        renderObject sphere;
-        sphere.vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
-        sphere.material.albedoMap = albedo;
-        sphere.material.metallicMap = metallic;
-        sphere.material.normalMap = normal;
-        sphere.material.roughnessMap = roughness;
-        sphere.material.ambientOcclusionMap = ao;
+        material temp = {
+            .albedoMap = albedo,
+            .normalMap = normal,
+            .metallicMap = metallic,
+            .roughnessMap = roughness,
+            .ambientOcclusionMap = ao
+        };
 
-        graphicsEngine.render(sphere);
+        entity ecsSphere;
+        {
+            ecsSphere.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
+                .vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE),
+                .material = temp
+                }));
+            ecsSphere.addComponent(ecsPhysics.createComponent(physicsSystem::rigidBodyData{
+                .simulationType = physicsWorld::rigidType::DYNAMIC,
+                .rigidType = rigidBody::types::SPHERE
+                }));
+            graphicsEngine.render(static_cast<graphicsComponent *>(ecsSphere.getComponent("graphics"))->renderObject);
+        }
 
-        renderObject plane;
-        plane.vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
-        plane.material.albedoMap = albedo;
-        plane.material.metallicMap = metallic;
-        plane.material.normalMap = normal;
-        plane.material.roughnessMap = roughness;
-        plane.material.ambientOcclusionMap = ao;
+        entity ecsPlane;
+        {
+            component &planeGraphics = ecsPlane.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
+                .vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE),
+                .material = temp
+            }));
+            component &planePhysics = ecsPlane.addComponent(ecsPhysics.createComponent(physicsSystem::rigidBodyData{
+                .simulationType = physicsWorld::rigidType::STATIC,
+                .rigidType = rigidBody::types::PLANE,
+                .transform = physx::PxTransform(physx::PxVec3(0, 5.f, 0), physx::PxQuat(physx::PxHalfPi, { 0, 0, -1 }))
+            }));
+            graphicsEngine.render(static_cast<graphicsComponent*>(ecsPlane.getComponent("graphics"))->renderObject);
 
-        plane.transform.position = { 0, 5.f, 0 };
-        plane.transform.scale = { 50.f, 0.f, 50.f };
+            static_cast<graphicsComponent&>(planeGraphics).renderObject.transform.position = { 0, 5.f, 0 };
+            static_cast<graphicsComponent&>(planeGraphics).renderObject.transform.scale = { 50.f, 0.f, 50.f };
 
-        graphicsEngine.render(plane);
+            graphicsEngine.render(static_cast<graphicsComponent&>(planeGraphics).renderObject);
+        }
 
-        renderObject cube;
-        cube.vao = primitive::cube::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE);
-        cube.material.albedoMap = albedo;
-        cube.material.metallicMap = metallic;
-        cube.material.normalMap = normal;
-        cube.material.roughnessMap = roughness;
-        cube.material.ambientOcclusionMap = ao;
+        entity ecsCube;
+        {
+            component &cubeGraphics = ecsPlane.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
+                .vao = primitive::cube::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE),
+                .material = temp
+            }));
 
-        cube.transform.position = { 2.f, 3.f, 0 };
-
-        graphicsEngine.render(cube);
-
-        rigidBody &sphereBody = physics.createBody(physicsWorld::rigidType::DYNAMIC, rigidBody::types::SPHERE);
-        rigidBody &planeBody = physics.createBody(physicsWorld::rigidType::STATIC, rigidBody::types::PLANE, physx::PxTransform(physx::PxVec3(0, 5.f, 0), physx::PxQuat(physx::PxHalfPi, { 0, 0, -1 })));
-
-        physics.addToScene(sphereBody);
-        physics.addToScene(planeBody);
+            static_cast<graphicsComponent&>(cubeGraphics).renderObject.transform.position = { 2.f, 3.f, 0.f };
+            graphicsEngine.render(static_cast<graphicsComponent&>(cubeGraphics).renderObject);
+        }
 
         pointLight &pl = graphicsEngine.createPointLight();
         pl.position = glm::vec3(-5.f, 4.f, 0.f);
@@ -183,8 +202,11 @@ int main()
                         editor.fixedUpdate(static_cast<float>(deltaTime.asSeconds()));
                     }
 
-                physx::PxTransform t = sphereBody.actor->getGlobalPose();
-                sphere.transform.position = {
+                physicsComponent &p = *static_cast<physicsComponent*>(ecsSphere.getComponent("physics"));
+                graphicsComponent &g = *static_cast<graphicsComponent*>(ecsSphere.getComponent("graphics"));
+
+                physx::PxTransform t = p.rigidBody.actor->getGlobalPose();
+                g.renderObject.transform.position = {
                     t.p.x, t.p.y, t.p.z
                 };
 

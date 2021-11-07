@@ -16,6 +16,7 @@ struct rigidBody
         enum class types : char {
             UNKNOWN,
             PLANE,
-            SPHERE
+            SPHERE,
+            BOX
         } type = types::UNKNOWN;
     };

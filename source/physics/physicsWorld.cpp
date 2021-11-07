@@ -97,6 +97,9 @@ rigidBody &physicsWorld::createBody(rigidType simulationType, rigidBody::types s
                 case rigidBody::types::SPHERE:
                     shape = m_physics->createShape(physx::PxSphereGeometry(1.f), *body.material);
                     break;
+                case rigidBody::types::BOX:
+                    shape = m_physics->createShape(physx::PxBoxGeometry(0.5f, 0.5f, 0.5f), *body.material);
+                    break;
                 default:
                     break;
             }
