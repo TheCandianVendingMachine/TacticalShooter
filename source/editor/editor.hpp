@@ -51,9 +51,14 @@ class editor
             orthographicCamera m_frontCamera;
             panCameraController m_orthographicController;
 
-            static constexpr float c_cameraDistance = 70'000.f;
+            static constexpr float m_minExtent = 1.f / 64.f;
+            static constexpr float m_maxExtent = 1.f / 4.f;
 
-            float m_orthoExtentModifier = 1 / 8.f;
+            float m_topOrthoExtentModifier = 1 / 8.f;
+            float m_rightOrthoExtentModifier = 1 / 8.f;
+            float m_frontOrthoExtentModifier = 1 / 8.f;
+
+            static constexpr float c_cameraDistance = 70'000.f;
 
             unsigned int m_3dFramebuffer = 0;
             unsigned int m_3dFramebufferColour = 0;

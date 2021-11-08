@@ -17,6 +17,7 @@ class window : public eventSource
 
             friend void windowResizeCallback(GLFWwindow *app, int width, int height);
             friend void framebufferResizeCallback(GLFWwindow *app, int width, int height);
+            friend void scrollCallback(GLFWwindow *app, double xOffset, double yOffset);
 
         public:
             const bool &cursorEnabled = m_cursorEnabled;

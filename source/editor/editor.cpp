@@ -70,13 +70,13 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
         m_camera3d.aspectRatio = extent.x / extent.y;
 
         m_topCamera.left = { 0, 0 };
-        m_topCamera.right = extent * m_orthoExtentModifier;
+        m_topCamera.right = extent * m_topOrthoExtentModifier;
 
         m_frontCamera.left = { 0, 0 };
-        m_frontCamera.right = extent * m_orthoExtentModifier;
+        m_frontCamera.right = extent * m_frontOrthoExtentModifier;
         
         m_rightCamera.left = { 0, 0 };
-        m_rightCamera.right = extent * m_orthoExtentModifier;
+        m_rightCamera.right = extent * m_rightOrthoExtentModifier;
 
         viewports previousViewport = m_activeViewport;
         m_activeViewport = viewports::NONE;
@@ -285,6 +285,33 @@ editor::editor(window &window, graphicsEngine &engine3d) :
         m_window.subscribe(FE_STR("framebufferResize"), [this](message &event) {
             generateFramebuffers({ event.arguments[0].variable.INT, event.arguments[1].variable.INT });
         });
+
+        m_window.subscribe(FE_STR("scroll"), [this](message &event) {
+            float yOffset = static_cast<float>(event.arguments[1].variable.DOUBLE);
+            float dy = yOffset * m_minExtent;
+
+            switch (m_activeViewport)
+                {
+                    case editor::viewports::NONE:
+                        break;
+                    case editor::viewports::VIEWPORT_3D:
+                        break;
+                    case editor::viewports::VIEWPORT_FRONT:
+                        m_frontOrthoExtentModifier += -dy;
+                        m_frontOrthoExtentModifier = glm::clamp(m_frontOrthoExtentModifier, m_minExtent, m_maxExtent);
+                        break;
+                    case editor::viewports::VIEWPORT_TOP:
+                        m_topOrthoExtentModifier += -dy;
+                        m_topOrthoExtentModifier = glm::clamp(m_topOrthoExtentModifier, m_minExtent, m_maxExtent);
+                        break;
+                    case editor::viewports::VIEWPORT_RIGHT:
+                        m_rightOrthoExtentModifier += -dy;
+                        m_rightOrthoExtentModifier = glm::clamp(m_rightOrthoExtentModifier, m_minExtent, m_maxExtent);
+                        break;
+                    default:
+                        break;
+                }
+        });
     }
 
 editor::~editor()
@@ -330,17 +357,17 @@ void editor::fixedUpdate(float deltaTime)
                 case viewports::VIEWPORT_FRONT:
                     m_frontCamera.position += m_orthographicController.getDeltaPosition(
                         m_frontCamera.direction, m_frontCamera.up
-                    ) * m_orthoExtentModifier;
+                    ) * m_frontOrthoExtentModifier;
                     break;
                 case viewports::VIEWPORT_RIGHT:
                     m_rightCamera.position += m_orthographicController.getDeltaPosition(
                         m_rightCamera.direction, m_rightCamera.up
-                    ) * m_orthoExtentModifier;
+                    ) * m_rightOrthoExtentModifier;
                     break;
                 case viewports::VIEWPORT_TOP:
                     m_topCamera.position += m_orthographicController.getDeltaPosition(
                         m_topCamera.direction, m_topCamera.up
-                    ) * m_orthoExtentModifier;
+                    ) * m_topOrthoExtentModifier;
                     break;
                 default:
                     break;

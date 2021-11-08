@@ -115,6 +115,12 @@ void framebufferResizeCallback(GLFWwindow *app, int width, int height)
         userWindow.signal(message(FE_STR("framebufferResize"), width, height));
     }
 
+void scrollCallback(GLFWwindow *app, double xOffset, double yOffset)
+    {
+        window &userWindow = *static_cast<window*>(glfwGetWindowUserPointer(app));
+        userWindow.signal(message(FE_STR("scroll"), xOffset, yOffset));
+    }
+
 window::window(int width, int height, const char *title) :
     m_width(width),
     m_height(height)
@@ -150,6 +156,7 @@ window::window(int width, int height, const char *title) :
 
         glfwSetWindowSizeCallback(m_window, &windowResizeCallback);
         glfwSetFramebufferSizeCallback(m_window, &framebufferResizeCallback);
+        glfwSetScrollCallback(m_window, &scrollCallback);
     }
 
 window::~window()
