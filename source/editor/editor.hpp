@@ -6,6 +6,7 @@
 #include "graphics/vertexArray.hpp"
 #include "graphics/shader.hpp"
 #include "controllers/flyCameraController.hpp"
+#include "controllers/panCameraController.hpp"
 
 class window;
 class graphicsEngine;
@@ -48,13 +49,14 @@ class editor
             orthographicCamera m_topCamera;
             orthographicCamera m_rightCamera;
             orthographicCamera m_frontCamera;
-            flyCameraController m_orthographicController;
+            panCameraController m_orthographicController;
+
+            static constexpr float c_cameraDistance = 70'000.f;
+
+            float m_orthoExtentModifier = 1 / 8.f;
 
             unsigned int m_3dFramebuffer = 0;
             unsigned int m_3dFramebufferColour = 0;
-
-            vertexArray m_grid;
-            shader m_gridShader;
 
             unsigned int m_topFramebuffer = 0;
             unsigned int m_topFramebufferColour = 0;

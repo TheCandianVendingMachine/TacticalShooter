@@ -12,7 +12,7 @@
 
 class mesh;
 class shader;
-class perspectiveCamera;
+class camera;
 class window;
 class graphicsEngine
     {
@@ -30,6 +30,8 @@ class graphicsEngine
             shader m_lightDebugShader;
 
             shader m_postProcessingShader;
+
+            shader m_editorOrthoShader;
 
             vertexArray m_quadVAO;
 
@@ -54,11 +56,32 @@ class graphicsEngine
             unsigned int m_screenWidth = 0;
             unsigned int m_screenHeight = 0;
 
-            bool m_debugDrawLight = false;
-
             void createFramebuffers();
 
+            void drawDeferred(const camera &camera) const;
+            void drawLight(const camera &camera) const;
+            void drawDebug(const camera &camera) const;
+            void postProcess(float exposure, unsigned int texture) const;
+
+            void drawEditorOrtho(const camera &camera, unsigned int texture) const;
+
         public:
+            enum class drawFlags
+                {
+                    NONE = 0,
+                    DEBUG_LIGHT = 1 << 0,
+                    NORMAL_PIPELINE = 1 << 1,
+                    EDITOR_ORTHO_PIPELINE = 1 << 2,
+                    ALL = 1 << 3,
+                    COUNT
+                };
+            friend drawFlags operator&(const drawFlags &lhs, const drawFlags &rhs) { return static_cast<drawFlags>(static_cast<std::underlying_type<drawFlags>::type>(lhs) & static_cast<std::underlying_type<drawFlags>::type>(rhs)); }
+            friend drawFlags operator|(const drawFlags &lhs, const drawFlags &rhs) { return static_cast<drawFlags>(static_cast<std::underlying_type<drawFlags>::type>(lhs) | static_cast<std::underlying_type<drawFlags>::type>(rhs)); }
+            friend drawFlags operator^(const drawFlags &lhs, const drawFlags &rhs) { return static_cast<drawFlags>(static_cast<std::underlying_type<drawFlags>::type>(lhs) ^ static_cast<std::underlying_type<drawFlags>::type>(rhs)); }
+            friend drawFlags &operator&=(drawFlags &lhs, const drawFlags &rhs) { lhs = lhs & rhs; return lhs; }
+            friend drawFlags &operator|=(drawFlags &lhs, const drawFlags &rhs) { lhs = lhs | rhs; return lhs; }
+            friend drawFlags &operator^=(drawFlags &lhs, const drawFlags &rhs) { lhs = lhs ^ rhs; return lhs; }
+
             directionalLight directionalLight;
 
             graphicsEngine(window &app);
@@ -69,5 +92,5 @@ class graphicsEngine
             void render(const renderObject &object);
             void render(const mesh &mesh);
 
-            void draw(const perspectiveCamera &camera, unsigned int texture = 0) const;
+            void draw(const camera &camera, unsigned int texture = 0, drawFlags flags = drawFlags::NORMAL_PIPELINE) const;
     };

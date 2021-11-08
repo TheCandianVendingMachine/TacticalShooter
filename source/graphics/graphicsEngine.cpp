@@ -91,87 +91,8 @@ void graphicsEngine::createFramebuffers()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-graphicsEngine::graphicsEngine(window &app) :
-    m_forwardRenderShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs"),
-    m_deferredRenderShader("shaders/forward_lighting.vs", "shaders/deferred_rendering_phong.fs"),
-    m_deferredLightingShader("shaders/deferred_lighting_phong.vs", "shaders/deferred_lighting_pbr.fs"),
-    m_lightDebugShader("shaders/basic3d.vs", "shaders/basic3d.fs"),
-    m_postProcessingShader("shaders/post_processing.vs", "shaders/post_processing.fs")
+void graphicsEngine::drawDeferred(const camera &camera) const
     {
-        m_screenWidth = app.width;
-        m_screenHeight = app.height;
-
-        m_forwardRenderShader.use();
-        m_forwardRenderShader.setFloat("gamma", 2.2);
-
-        m_forwardRenderShader.setInt("material.diffuse", 0);
-        m_forwardRenderShader.setInt("material.specular", 1);
-        m_forwardRenderShader.setFloat("material.shininess", 128.f);
-
-        m_deferredRenderShader.use();
-        m_deferredRenderShader.setInt("material.albedoMap", 0);
-        m_deferredRenderShader.setInt("material.normalMap", 1);
-        m_deferredRenderShader.setInt("material.metallicMap", 2);
-        m_deferredRenderShader.setInt("material.roughnessMap", 3);
-        m_deferredRenderShader.setInt("material.ambientOcclusionMap", 4);
-
-        m_postProcessingShader.use();
-        m_postProcessingShader.setInt("Image", 0);
-
-        /* BEGIN DEFERRED RENDERING */
-        glGenFramebuffers(1, &m_deferredFramebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
-
-        unsigned int gBuffers[c_gBufferCount + 1] = {};
-        glGenTextures(c_gBufferCount + 1, gBuffers);
-
-        m_gAlbedo =					gBuffers[0];
-        m_gNormal =					gBuffers[1];
-        m_gPosition =				gBuffers[2];
-        m_gMetallicRoughnessAO =	gBuffers[3];
-        m_gDepth =					gBuffers[4];
-
-        /* END DEFERRED RENDERING */
-
-        /* BEGIN POST PROCESSING */
-        glGenFramebuffers(1, &m_ppFramebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
-        glGenTextures(1, &m_ppRenderTexture);
-        glGenTextures(1, &m_ppDepth);
-
-        /* END POST PROCESSING*/
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        createFramebuffers();
-        app.subscribe(FE_STR("framebufferResize"), [this] (message &event) {
-            m_screenWidth = event.arguments[0].variable.INT;
-            m_screenHeight = event.arguments[1].variable.INT;
-
-            createFramebuffers();
-        });
-
-        m_quadVAO = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
-
-        m_pointLightVAO = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR);
-        m_directionalLightVAO = primitive::plane::generate(vertex::attributes::POSITION);
-    }
-
-void graphicsEngine::render(const renderObject &object)
-    {
-        m_renderObjects.push_back(&object);
-    }
-
-void graphicsEngine::render(const mesh &object)
-    {
-        m_meshes.push_back(&object);
-    }
-
-void graphicsEngine::draw(const perspectiveCamera &camera, unsigned int texture) const
-    {
-        glCullFace(GL_BACK);
-
-        /* BEGIN DEFERRED RENDERING */
         glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -213,10 +134,12 @@ void graphicsEngine::draw(const perspectiveCamera &camera, unsigned int texture)
                         glDrawElements(GL_TRIANGLES, submesh.indexCount, GL_UNSIGNED_INT, reinterpret_cast<void*>(submesh.indexStartIndex));
                     }
             }
-        /* END DEFERRED RENDERING */
+    }
 
+void graphicsEngine::drawLight(const camera &camera) const
+    {
         glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
-        /* BEGIN LIGHT EQUATION */
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glBlendEquation(GL_FUNC_ADD);
@@ -291,45 +214,45 @@ void graphicsEngine::draw(const perspectiveCamera &camera, unsigned int texture)
 
         glEnable(GL_DEPTH_TEST); // we want fragments to overdraw
         glDisable(GL_BLEND);
-        /* END LIGHT EQUATION */
-        /* BEGIN DEBUG DRAWING */
-        if (m_debugDrawLight) 
+    }
+
+void graphicsEngine::drawDebug(const camera &camera) const
+    {
+        m_lightDebugShader.use();
+        m_lightDebugShader.setMat4("view", camera.view());
+        m_lightDebugShader.setMat4("projection", camera.projection());
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDisable(GL_CULL_FACE);
+
+        glBindVertexArray(m_pointLightVAO.vao);
+        for (const auto &pointLight : m_pointLights)
             {
-                m_lightDebugShader.use();
-                m_lightDebugShader.setMat4("view", camera.view());
-                m_lightDebugShader.setMat4("projection", camera.projection());
+                float scale = pointLight.info.radius();
+                glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
+                model = glm::scale(model, glm::vec3(scale));
+                m_lightDebugShader.setMat4("model", model);
 
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                glDisable(GL_CULL_FACE);
-
-                glBindVertexArray(m_pointLightVAO.vao);
-                for (const auto &pointLight : m_pointLights)
-                    {
-                        float scale = pointLight.info.radius();
-                        glm::mat4 model = glm::translate(glm::mat4(1.f), pointLight.position);
-                        model = glm::scale(model, glm::vec3(scale));
-                        m_lightDebugShader.setMat4("model", model);
-
-                        glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
-                    }
-
-                for (const auto &spotLight : m_spotLights)
-                {
-                    float scale = spotLight.info.radius();
-                    glm::mat4 model = glm::translate(glm::mat4(1.f), spotLight.position);
-                    model = glm::scale(model, glm::vec3(scale));
-                    m_lightDebugShader.setMat4("model", model);
-
-                    glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
-                }
-
-                glBindVertexArray(0);
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                glEnable(GL_CULL_FACE);
+                glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
             }
-        /* END DEBUG DRAWING */
 
-        /* BEGIN POST PROCESSING */
+        for (const auto &spotLight : m_spotLights)
+        {
+            float scale = spotLight.info.radius();
+            glm::mat4 model = glm::translate(glm::mat4(1.f), spotLight.position);
+            model = glm::scale(model, glm::vec3(scale));
+            m_lightDebugShader.setMat4("model", model);
+
+            glDrawElements(GL_TRIANGLES, m_pointLightVAO.indexCount, GL_UNSIGNED_INT, 0);
+        }
+
+        glBindVertexArray(0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_CULL_FACE);
+    }
+
+void graphicsEngine::postProcess(float exposure, unsigned int texture) const
+    {
         glDisable(GL_CULL_FACE);
         glBindFramebuffer(GL_FRAMEBUFFER, texture);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -339,7 +262,7 @@ void graphicsEngine::draw(const perspectiveCamera &camera, unsigned int texture)
 
         m_postProcessingShader.use();
         m_postProcessingShader.setFloat("gamma", 2.2f);
-        m_postProcessingShader.setFloat("exposure", 1.f);
+        m_postProcessingShader.setFloat("exposure", exposure);
 
         glBindVertexArray(m_quadVAO.vao);
         glDrawElements(GL_TRIANGLES, m_quadVAO.indexCount, GL_UNSIGNED_INT, 0);
@@ -347,7 +270,139 @@ void graphicsEngine::draw(const perspectiveCamera &camera, unsigned int texture)
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_CULL_FACE);
-        /* END POST PROCESSING */
+    }
+
+void graphicsEngine::drawEditorOrtho(const camera &camera, unsigned int texture) const
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, texture);
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        m_editorOrthoShader.use();
+
+        m_editorOrthoShader.setMat4("view", camera.view());
+        m_editorOrthoShader.setMat4("projection", camera.projection());
+
+        for (const auto &renderObject : m_renderObjects) 
+            {
+                m_editorOrthoShader.setMat4("model", renderObject->transform.transform());
+
+                glBindVertexArray(renderObject->vao.vao);
+                glDrawElements(GL_TRIANGLES, renderObject->vao.indexCount, GL_UNSIGNED_INT, 0);
+            }
+
+        for (const auto &mesh : m_meshes) 
+            {
+                glm::mat4 transform(1.f);
+                m_editorOrthoShader.setMat4("model", transform);
+
+                glBindVertexArray(mesh->m_vertices.vao);
+                for (auto &submesh : mesh->m_subMeshes) 
+                    {
+                        glDrawElements(GL_TRIANGLES, submesh.indexCount, GL_UNSIGNED_INT, reinterpret_cast<void*>(submesh.indexStartIndex));
+                    }
+            }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+graphicsEngine::graphicsEngine(window &app) :
+    m_forwardRenderShader("shaders/forward_lighting.vs", "shaders/forward_lighting.fs"),
+    m_deferredRenderShader("shaders/forward_lighting.vs", "shaders/deferred_rendering_phong.fs"),
+    m_deferredLightingShader("shaders/deferred_lighting_phong.vs", "shaders/deferred_lighting_pbr.fs"),
+    m_lightDebugShader("shaders/basic3d.vs", "shaders/basic3d.fs"),
+    m_postProcessingShader("shaders/post_processing.vs", "shaders/post_processing.fs"),
+    m_editorOrthoShader("shaders/editor_ortho.vs", "shaders/editor_ortho.fs")
+    {
+        m_screenWidth = app.width;
+        m_screenHeight = app.height;
+
+        m_forwardRenderShader.use();
+        m_forwardRenderShader.setFloat("gamma", 2.2);
+
+        m_forwardRenderShader.setInt("material.diffuse", 0);
+        m_forwardRenderShader.setInt("material.specular", 1);
+        m_forwardRenderShader.setFloat("material.shininess", 128.f);
+
+        m_deferredRenderShader.use();
+        m_deferredRenderShader.setInt("material.albedoMap", 0);
+        m_deferredRenderShader.setInt("material.normalMap", 1);
+        m_deferredRenderShader.setInt("material.metallicMap", 2);
+        m_deferredRenderShader.setInt("material.roughnessMap", 3);
+        m_deferredRenderShader.setInt("material.ambientOcclusionMap", 4);
+
+        m_postProcessingShader.use();
+        m_postProcessingShader.setInt("Image", 0);
+
+        /* BEGIN DEFERRED RENDERING */
+        glGenFramebuffers(1, &m_deferredFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_deferredFramebuffer);
+
+        unsigned int gBuffers[c_gBufferCount + 1] = {};
+        glGenTextures(c_gBufferCount + 1, gBuffers);
+
+        m_gAlbedo =					gBuffers[0];
+        m_gNormal =					gBuffers[1];
+        m_gPosition =				gBuffers[2];
+        m_gMetallicRoughnessAO =	gBuffers[3];
+        m_gDepth =					gBuffers[4];
+
+        /* END DEFERRED RENDERING */
+
+        /* BEGIN POST PROCESSING */
+        glGenFramebuffers(1, &m_ppFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_ppFramebuffer);
+        glGenTextures(1, &m_ppRenderTexture);
+        glGenTextures(1, &m_ppDepth);
+
+        /* END POST PROCESSING*/
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        createFramebuffers();
+        app.subscribe(FE_STR("framebufferResize"), [this] (message &event) {
+            m_screenWidth = event.arguments[0].variable.INT;
+            m_screenHeight = event.arguments[1].variable.INT;
+
+            createFramebuffers();
+        });
+
+        m_quadVAO = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::TEXTURE);
+
+        m_pointLightVAO = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::COLOUR);
+        m_directionalLightVAO = primitive::plane::generate(vertex::attributes::POSITION);
+    }
+
+void graphicsEngine::render(const renderObject &object)
+    {
+        m_renderObjects.push_back(&object);
+    }
+
+void graphicsEngine::render(const mesh &object)
+    {
+        m_meshes.push_back(&object);
+    }
+
+void graphicsEngine::draw(const camera &camera, unsigned int texture, drawFlags flags) const
+    {
+        if ((flags & drawFlags::NORMAL_PIPELINE) != drawFlags::NONE)
+            {
+                glCullFace(GL_BACK);
+
+                drawDeferred(camera);
+                drawLight(camera);
+        
+                if ((flags & drawFlags::DEBUG_LIGHT) != drawFlags::NONE)
+                    {
+                        drawDebug(camera);
+                    }
+
+                postProcess(camera.exposure, texture);
+            }
+        else if ((flags & drawFlags::EDITOR_ORTHO_PIPELINE) != drawFlags::NONE)
+            {
+                drawEditorOrtho(camera, texture);
+            }
     }
 
 spotLight &graphicsEngine::createSpotLight()

@@ -70,19 +70,24 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
         m_camera3d.aspectRatio = extent.x / extent.y;
 
         m_topCamera.left = { 0, 0 };
-        m_topCamera.right = extent;
+        m_topCamera.right = extent * m_orthoExtentModifier;
 
         m_frontCamera.left = { 0, 0 };
-        m_frontCamera.right = extent;
+        m_frontCamera.right = extent * m_orthoExtentModifier;
         
         m_rightCamera.left = { 0, 0 };
-        m_rightCamera.right = extent;
+        m_rightCamera.right = extent * m_orthoExtentModifier;
 
+        viewports previousViewport = m_activeViewport;
         m_activeViewport = viewports::NONE;
 
         // 4 viewports: 3d, top, right, front
         if ((m_mode & mode::DRAW_4_EDITORS) == mode::DRAW_4_EDITORS) 
             {
+                m_3dEngine.draw(m_topCamera, m_topFramebuffer, graphicsEngine::drawFlags::EDITOR_ORTHO_PIPELINE);
+                m_3dEngine.draw(m_rightCamera, m_rightFramebuffer, graphicsEngine::drawFlags::EDITOR_ORTHO_PIPELINE);
+                m_3dEngine.draw(m_frontCamera, m_frontFramebuffer, graphicsEngine::drawFlags::EDITOR_ORTHO_PIPELINE);
+
                 ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x, topLeft.y });
@@ -92,7 +97,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
                         m_window.enableCursor(false);
                         m_activeViewport = viewports::VIEWPORT_3D;
                     }
-                else
+                else if (previousViewport == viewports::VIEWPORT_3D)
                     {
                         m_window.enableCursor(true);
                         m_camera3dController.resetMouse();
@@ -107,7 +112,14 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x + extent.x, topLeft.y });
 
-                if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_TOP; }
+                if (ImGui::IsItemActive()) 
+                    {
+                        m_activeViewport = viewports::VIEWPORT_TOP;
+                    }
+                else if (previousViewport == viewports::VIEWPORT_TOP)
+                    {
+                        m_orthographicController.resetMouse();
+                    }
 
                 drawViewportFramebuffer(extent, m_topFramebufferColour);
 
@@ -119,7 +131,14 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x, topLeft.y + extent.y });
 
-                if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_RIGHT; }
+                if (ImGui::IsItemActive()) 
+                    { 
+                        m_activeViewport = viewports::VIEWPORT_RIGHT;
+                    }
+                else if (previousViewport == viewports::VIEWPORT_RIGHT)
+                    {
+                        m_orthographicController.resetMouse();
+                    }
 
                 drawViewportFramebuffer(extent, m_rightFramebufferColour);
 
@@ -131,7 +150,14 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x + extent.x, topLeft.y + extent.y });
 
-                if (ImGui::IsItemActive()) { m_activeViewport = viewports::VIEWPORT_FRONT; }
+                if (ImGui::IsItemActive()) 
+                    {
+                        m_activeViewport = viewports::VIEWPORT_FRONT;
+                    }
+                else if (previousViewport == viewports::VIEWPORT_FRONT)
+                    {
+                        m_orthographicController.resetMouse();
+                    }
 
                 drawViewportFramebuffer(extent, m_frontFramebufferColour);
 
@@ -213,22 +239,31 @@ void editor::generateFramebuffers(glm::vec2 extent)
 
 editor::editor(window &window, graphicsEngine &engine3d) : 
     m_window(window),
-    m_3dEngine(engine3d),
-    m_gridShader("shaders/editor_2d_grid.vs", "shaders/editor_2d_grid.fs")
+    m_3dEngine(engine3d)
     {
         initKeybinds();
 
         m_camera3d.setPitchYaw(0.f, 0.f);
 
         m_topCamera.setPitchYaw(90.f, 0.f);
+        m_topCamera.up = { 0.f, 0.f, 1.f };
+
         m_frontCamera.setPitchYaw(0.f, 0.f);
         m_rightCamera.setPitchYaw(0.f, 90.f);
 
+        m_topCamera.position = { 0.f, -c_cameraDistance / 2.f, 0.f };
+        m_frontCamera.position = { c_cameraDistance / 2.f, 0.f, 0.f };
+        m_rightCamera.position = { 0.f, 0.f, c_cameraDistance / 2.f };
+
+        m_topCamera.zFar = c_cameraDistance;
+        m_frontCamera.zFar = c_cameraDistance;
+        m_rightCamera.zFar = c_cameraDistance;
+
+        m_topCamera.zNear = -c_cameraDistance;
+        m_frontCamera.zNear = -c_cameraDistance;
+        m_rightCamera.zNear = -c_cameraDistance;
+
         glGenFramebuffers(1, &m_3dFramebuffer);
-        if (glCheckFramebufferStatus(m_3dFramebuffer) != GL_FRAMEBUFFER_COMPLETE)
-            {
-                spdlog::error("[Editor (3d)] Could not generate framebuffer");
-            }
         glGenTextures(1, &m_3dFramebufferColour);
 
         unsigned int fbs[3];
@@ -245,13 +280,6 @@ editor::editor(window &window, graphicsEngine &engine3d) :
         m_rightFramebufferColour = colours[1];
         m_topFramebufferColour = colours[2];
 
-        for (int i = 0; i < 3; i++)
-            {
-                if (glCheckFramebufferStatus(fbs[i]) != GL_FRAMEBUFFER_COMPLETE)
-                    {
-                        spdlog::error("[Editor (Grid)] Could not generate framebuffer");
-                    }
-            }
         generateFramebuffers({ m_window.width, m_window.height });
 
         m_window.subscribe(FE_STR("framebufferResize"), [this](message &event) {
@@ -301,21 +329,18 @@ void editor::fixedUpdate(float deltaTime)
                     break;
                 case viewports::VIEWPORT_FRONT:
                     m_frontCamera.position += m_orthographicController.getDeltaPosition(
-                        forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
-                        m_frontCamera.direction, m_frontCamera.up, deltaTime
-                    );
+                        m_frontCamera.direction, m_frontCamera.up
+                    ) * m_orthoExtentModifier;
                     break;
                 case viewports::VIEWPORT_RIGHT:
                     m_rightCamera.position += m_orthographicController.getDeltaPosition(
-                        forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
-                        m_rightCamera.direction, m_rightCamera.up, deltaTime
-                    );
+                        m_rightCamera.direction, m_rightCamera.up
+                    ) * m_orthoExtentModifier;
                     break;
                 case viewports::VIEWPORT_TOP:
                     m_topCamera.position += m_orthographicController.getDeltaPosition(
-                        forwardKeyCode, backwardKeyCode, leftKeyCode, rightKeyCode,
-                        m_topCamera.direction, m_topCamera.up, deltaTime
-                    );
+                        m_topCamera.direction, m_topCamera.up
+                    ) * m_orthoExtentModifier;
                     break;
                 default:
                     break;

@@ -47,7 +47,7 @@ shader::shader(const char *vertexPath, const char *fragmentPath)
         if (!success)
             {
                 glGetProgramInfoLog(id, 512, NULL, infoLog);
-                spdlog::error("Failed to link shader:\n{}", infoLog);
+                spdlog::error("Failed to link shader [vs: {} | fs:{} ]:\n{}", vertexPath, fragmentPath, infoLog);
             }
 
         glDeleteShader(vertexShader);

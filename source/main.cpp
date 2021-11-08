@@ -112,19 +112,21 @@ int main()
         };
 
         entity ecsSphere;
+        ecsSphere.name = "sphere";
         {
             ecsSphere.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
                 .vao = primitive::sphere::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE),
                 .material = temp
-                }));
+            }));
             ecsSphere.addComponent(ecsPhysics.createComponent(physicsSystem::rigidBodyData{
                 .simulationType = physicsWorld::rigidType::DYNAMIC,
                 .rigidType = rigidBody::types::SPHERE
-                }));
+            }));
             graphicsEngine.render(static_cast<graphicsComponent *>(ecsSphere.getComponent("graphics"))->renderObject);
         }
 
         entity ecsPlane;
+        ecsPlane.name = "plane";
         {
             component &planeGraphics = ecsPlane.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
                 .vao = primitive::plane::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE),
@@ -144,8 +146,9 @@ int main()
         }
 
         entity ecsCube;
+        ecsCube.name = "cube";
         {
-            component &cubeGraphics = ecsPlane.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
+            component &cubeGraphics = ecsCube.addComponent(ecsGraphics.createComponent(graphicsSystem::graphicData{
                 .vao = primitive::cube::generate(vertex::attributes::POSITION | vertex::attributes::NORMAL | vertex::attributes::TANGENT | vertex::attributes::TEXTURE),
                 .material = temp
             }));

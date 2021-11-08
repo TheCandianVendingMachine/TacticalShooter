@@ -25,7 +25,7 @@ class physicsWorld
 
             static constexpr double c_defaultStaticFriction = 0.5;
             static constexpr double c_defaultDynamicFriction = 0.5;
-            static constexpr double c_defaultRestitution = 0.5;
+            static constexpr double c_defaultRestitution = 1;
 
             physx::PxFoundation *m_foundation = nullptr;
             physx::PxPhysics *m_physics = nullptr;
