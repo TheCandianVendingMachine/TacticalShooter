@@ -69,14 +69,14 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
         const glm::vec2 extent = (bottomRight - topLeft) / 2.f;
         m_camera3d.aspectRatio = extent.x / extent.y;
 
-        m_topCamera.left = { 0, 0 };
-        m_topCamera.right = extent * m_topOrthoExtentModifier;
+        m_topCamera.left = { 0, extent.y * m_topOrthoExtentModifier };
+        m_topCamera.right = { extent.x * m_topOrthoExtentModifier, 0 };
 
-        m_frontCamera.left = { 0, 0 };
-        m_frontCamera.right = extent * m_frontOrthoExtentModifier;
+        m_frontCamera.left = { 0, extent.y * m_frontOrthoExtentModifier };
+        m_frontCamera.right = { extent.x * m_frontOrthoExtentModifier, 0 };
         
-        m_rightCamera.left = { 0, 0 };
-        m_rightCamera.right = extent * m_rightOrthoExtentModifier;
+        m_rightCamera.left = { 0, extent.y * m_rightOrthoExtentModifier };
+        m_rightCamera.right = { extent.x * m_rightOrthoExtentModifier, 0 };
 
         viewports previousViewport = m_activeViewport;
         m_activeViewport = viewports::NONE;

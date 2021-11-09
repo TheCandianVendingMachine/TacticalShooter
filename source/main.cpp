@@ -10,7 +10,6 @@
     ENGINE: Decals
     ENGINE: Mesh bone animations
     ENGINE: Multiplayer
-    ENGINE: PhysX
     ENGINE: Game state machine
     ENGINE: FMOD integration
     ENGINE: Steam Audio

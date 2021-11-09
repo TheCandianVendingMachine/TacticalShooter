@@ -18,13 +18,12 @@ glm::vec3 panCameraController::getDeltaPosition(glm::vec3 forward, glm::vec3 up)
             }
 
         glm::vec2 deltaPos = globals::g_inputs->getCursorPosition() - m_lastMousePos;
-        deltaPos.x = -deltaPos.x;
         m_lastMousePos = globals::g_inputs->getCursorPosition();
 
         glm::vec3 panDirection = glm::normalize(glm::cross(forward, up));
         glm::mat3 cob(panDirection, up, forward);
 
-        glm::vec3 relativePosition = cob * glm::vec3(deltaPos, 0);
+        glm::vec3 relativePosition = cob * glm::vec3(-deltaPos, 0);
         if (glm::any(glm::lessThan(glm::abs(relativePosition), glm::vec3(fe::EPSILON))))
             {
                 if (glm::abs(relativePosition.x) < fe::EPSILON)
