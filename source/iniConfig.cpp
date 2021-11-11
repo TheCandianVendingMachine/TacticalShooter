@@ -137,6 +137,7 @@ void iniConfig::load(std::string_view file)
                                                         {
                                                             possibleValues ^= intValues;
                                                             hasDecimal = true;
+                                                            power /= 10;
                                                         }
                                                     else
                                                         {
@@ -174,11 +175,26 @@ void iniConfig::load(std::string_view file)
                                                                 sign = -1;
                                                             }
 
+                                                        bool isDecimal = false;
                                                         for (const auto &c : v.m_value)
                                                             {
-                                                                if (c == '-' || c == '.') { continue; }
-                                                                power /= 10;
-                                                                numericValue += (c - '0') * power;
+                                                                if (c == '-') { continue; }
+                                                                if (isDecimal) 
+                                                                    {
+                                                                        numericValue += (c - '0') / static_cast<double>(power);
+                                                                        power *= 10;
+                                                                    }
+                                                                else 
+                                                                    {
+                                                                        if (c == '.') 
+                                                                            {
+                                                                                isDecimal = true;
+                                                                                power = 10;
+                                                                                continue;
+                                                                            }
+                                                                        power /= 10;
+                                                                        numericValue += (c - '0') * power;
+                                                                    }
                                                             }
                                                         numericValue *= sign;
 
@@ -257,6 +273,11 @@ void iniConfig::save(std::string_view file) const
         std::fclose(stream);
     }
 
+bool iniConfig::has(const std::string &key) const
+    {
+        return m_sections.find(key) != m_sections.end();
+    }
+
 iniConfig::section &iniConfig::operator[](const std::string &key)
     {
         return m_sections[key];
@@ -313,6 +334,11 @@ const iniConfig::value &iniConfig::section::operator[](const std::string &key) c
                 return value{};
             }
         return m_keyValuePairs.at(key);
+    }
+
+bool iniConfig::section::has(const std::string &key) const
+    {
+        return m_keyValuePairs.find(key) != m_keyValuePairs.end();
     }
 
 void iniConfig::value::setAndInfer(std::string_view valueStr)

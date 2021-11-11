@@ -58,9 +58,14 @@
 #include "ecs/physicsComponent.hpp"
 #include "ecs/entity.hpp"
 
+
+#include "server/gameServer.hpp"
+
 int main()
     {
         spdlog::set_level(spdlog::level::debug);
+
+        gameServer server;
         
         physicsWorld physics;
 

@@ -105,6 +105,8 @@ class iniConfig
 
                         value &operator[](const std::string& key);
                         const value &operator[](const std::string& key) const;
+
+                        bool has(const std::string &key) const;
                 };
 
             robin_hood::unordered_map<std::string, section> m_sections;
@@ -118,6 +120,8 @@ class iniConfig
 
             void load(std::string_view file);
             void save(std::string_view file) const;
+
+            bool has(const std::string &key) const;
 
             section &operator[](const std::string& key);
             const section &operator[](const std::string &key) const;
