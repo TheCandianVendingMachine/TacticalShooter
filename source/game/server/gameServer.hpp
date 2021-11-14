@@ -10,6 +10,7 @@
 #include <thread>
 
 class iniConfig;
+class gameClient;
 class gameServer
     {
         private:
@@ -21,6 +22,11 @@ class gameServer
             HSteamNetPollGroup m_pollGroup = k_HSteamNetPollGroup_Invalid;
             ISteamNetworkingSockets *m_socketInterface = nullptr;
 
+            HSteamNetConnection m_localServerConnection = k_HSteamNetConnection_Invalid;
+            HSteamNetConnection m_localClientConnection = k_HSteamNetConnection_Invalid;
+
+            bool m_isLAN = false;
+
             robin_hood::unordered_map<HSteamNetConnection, void*> m_clients;
 
             std::atomic<bool> m_running = true;
@@ -28,13 +34,38 @@ class gameServer
             fe::time m_simulationRate = c_defaultSimulationRate;
             fe::time m_serverPollRate = c_defaultServerPollRate;
 
+            bool connectClient(HSteamNetConnection connection);
+            void disconnectClient(HSteamNetConnection connection);
+
             void handleMessage(const ISteamNetworkingMessage *message);
 
             void run(SteamNetworkingIPAddr address);
             void setSettings(iniConfig &serverConfig) const;
 
+            bool createLAN(SteamNetworkingIPAddr localIP, gameClient *lanClient);
+            bool createLocal(SteamNetworkingIPAddr localIP, gameClient *lanClient);
+            bool createDedicated(SteamNetworkingIPAddr localIP);
+
+            friend void connectionStatusChangedCallback(SteamNetConnectionStatusChangedCallback_t *pInfo);
+
         public:
-            gameServer();
+            std::uint16_t port = c_defaultPort;
+            const bool &isLAN = m_isLAN;
+
+            enum class mode
+                {
+                    LAN,
+                    LOCAL,
+                    DEDICATED
+                };
+
+            gameServer(mode serverType, gameClient *lanClient);
             ~gameServer();
 
     };
+
+namespace globals
+    {
+        extern gameServer *g_server;
+    }
+

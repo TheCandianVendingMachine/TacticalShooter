@@ -59,17 +59,37 @@
 #include "ecs/entity.hpp"
 
 
-#include "server/gameServer.hpp"
+#include "game/server/gameServer.hpp"
+#include "game/client/gameClient.hpp"
+#include <steam/steamnetworkingsockets.h>
+#include <steam/isteamnetworkingutils.h>
 
 int main()
     {
         spdlog::set_level(spdlog::level::debug);
 
-        gameServer server;
-        
+        SteamDatagramErrMsg errorMessage;
+        if (!GameNetworkingSockets_Init(nullptr, errorMessage))
+            {
+                spdlog::error("Cannot initialise GameNetworkingSockets: {}", errorMessage);
+                return -1;
+            }
+
+        gameClient client;
+        gameServer server(gameServer::mode::DEDICATED, &client);
+
+        globals::g_server = &server;
+        globals::g_client = &client;
+
+        SteamNetworkingIPAddr ip{};
+        ip.Clear();
+        ip.ParseString("96.52.119.21:27020");
+        ip.SetIPv6LocalHost(server.port);
+        client.connect(ip);
+
         physicsWorld physics;
 
-        fe::randomImpl c_generator;
+        fe::randomImpl c_generator{};
         c_generator.startUp();
         c_generator.seed(1337);
 
@@ -225,7 +245,11 @@ int main()
 
                 app.display();
                 app.pollEvents();
+
+                client.pollMessages();
             }
+
+        client.disconnect();
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
