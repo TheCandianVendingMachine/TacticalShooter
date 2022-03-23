@@ -1,6 +1,9 @@
 #include "physicsWorld.hpp"
 #include <spdlog/spdlog.h>
 
+physx::PxFoundation *physicsWorld::s_foundation = nullptr;
+int physicsWorld::s_physicsReferenceCounter = 0;
+
 physx::PxFilterFlags SampleSubmarineFilterShader(
     physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
     physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1,
@@ -23,15 +26,19 @@ physicsWorld::physicsWorld()
         const_cast<physx::PxTolerancesScale&>(c_tolerances).length = c_length;
         const_cast<physx::PxTolerancesScale&>(c_tolerances).speed = c_gravity;
 
-        m_foundation = PxCreateFoundation(PX_PHYSICS_VERSION, m_allocator, m_errorCallback);
+        if (!s_foundation) 
+            {
+                s_foundation = PxCreateFoundation(PX_PHYSICS_VERSION, m_allocator, m_errorCallback);
+            }
+        s_physicsReferenceCounter += 1;
 
-        if (!m_foundation)
+        if (!s_foundation)
             {
                 spdlog::error("PhysX Foundation creation failed");
                 return;
             }
 
-        m_physics = PxCreatePhysics(PX_PHYSICS_VERSION, *m_foundation, c_tolerances, true);
+        m_physics = PxCreatePhysics(PX_PHYSICS_VERSION, *s_foundation, c_tolerances, true);
         if (!m_physics)
             {
                 spdlog::error("Could not create physics");
@@ -59,7 +66,12 @@ physicsWorld::~physicsWorld()
     {
         m_scene->release();
         m_physics->release();
-        m_foundation->release();
+
+        s_physicsReferenceCounter -= 1;
+        if (s_physicsReferenceCounter <= 0) 
+            {
+                s_foundation->release();
+            }
     }
 
 void physicsWorld::fixedUpdate(double deltaTime)

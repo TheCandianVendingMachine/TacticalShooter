@@ -132,8 +132,10 @@ void gameServer::run(SteamNetworkingIPAddr address)
 
                 m_socketInterface->RunCallbacks();
 
+                m_game.update();
                 while (accumulator >= m_simulationRate)
                     {
+                        m_game.fixedUpdate(m_simulationRate.asSeconds());
                         accumulator -= m_simulationRate;
                     }
 

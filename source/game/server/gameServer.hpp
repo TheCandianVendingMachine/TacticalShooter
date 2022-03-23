@@ -2,6 +2,7 @@
 // Handles game state, sending messages to clients
 #pragma once
 #include "time.hpp"
+#include "serverGameWorld.hpp"
 
 #include <cstdint>
 #include <steam/isteamnetworkingsockets.h>
@@ -14,6 +15,7 @@ class gameClient;
 class gameServer
     {
         private:
+            // Server
             static constexpr std::uint16_t c_defaultPort = 27020;
             static constexpr fe::time c_defaultSimulationRate = fe::seconds(1.0 / 20.0);
             static constexpr fe::time c_defaultServerPollRate = fe::seconds(1.0 / 50.0);
@@ -47,6 +49,9 @@ class gameServer
             bool createDedicated(SteamNetworkingIPAddr localIP);
 
             friend void connectionStatusChangedCallback(SteamNetConnectionStatusChangedCallback_t *pInfo);
+
+            // Game
+            serverGameWorld m_game;
 
         public:
             std::uint16_t port = c_defaultPort;

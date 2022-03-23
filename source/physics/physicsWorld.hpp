@@ -27,7 +27,9 @@ class physicsWorld
             static constexpr double c_defaultDynamicFriction = 0.5;
             static constexpr double c_defaultRestitution = 1;
 
-            physx::PxFoundation *m_foundation = nullptr;
+            static physx::PxFoundation *s_foundation;
+            static int s_physicsReferenceCounter;
+
             physx::PxPhysics *m_physics = nullptr;
             physx::PxScene *m_scene = nullptr;
 
@@ -46,3 +48,8 @@ class physicsWorld
             rigidBody &createBody(rigidType simulationType, rigidBody::types shapeType, physx::PxTransform transform = physx::PxTransform(0, 0, 0));
             void addToScene(rigidBody &body);
     };
+
+namespace globals 
+    {
+        extern physicsWorld *g_physics;
+    }
