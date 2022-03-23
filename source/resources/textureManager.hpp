@@ -17,6 +17,7 @@ class textureManager
                     std::vector<char> hash;
                     std::vector<char> internalName;
                     std::vector<unsigned char> imageData;
+                    bool isSRGB = false;
                 };
 
             friend void parseMetaFileV1(std::FILE *stream, textureManager::metaFileData &metaFile);
@@ -26,6 +27,7 @@ class textureManager
 
         public:
             const robin_hood::unordered_map<std::string, std::string> &nameUIDMap = m_nameUIDMap;
+            const robin_hood::unordered_map<std::string, texture> &textures = m_textures;
 
             void loadFromMetaImage(const char *path);
             texture get(const char *name);

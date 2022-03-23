@@ -56,6 +56,17 @@ void parseMetaFileV1(std::FILE *stream, textureManager::metaFileData &metaFile)
                     metaFile.imageData[i] = std::getc(stream);
                 }
         }
+
+        {
+            bool isSRGB = false;
+            char *isSRGBBuffer = reinterpret_cast<char*>(&isSRGB);
+            for (int i = 0; i < sizeof(isSRGB); i++)
+                {
+                    isSRGBBuffer[i] = std::getc(stream);
+                }
+
+            metaFile.isSRGB = isSRGB;
+        }
     }
 
 void textureManager::loadFromMetaImage(const char *path)
@@ -82,7 +93,7 @@ void textureManager::loadFromMetaImage(const char *path)
         std::fclose(stream);
 
         texture t;
-        t.loadFromMemory(metaFile.imageData.data(), metaFile.imageData.size(), false);
+        t.loadFromMemory(metaFile.imageData.data(), metaFile.imageData.size(), metaFile.isSRGB);
 
         m_nameUIDMap.insert({ metaFile.internalName.data(), metaFile.hash.data() });
         m_textures.insert({ metaFile.hash.data(), std::move(t) });
