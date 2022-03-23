@@ -12,8 +12,6 @@ class graphicsSystem
         private:
             plf::colony<graphicsComponent> m_components;
 
-            graphicsEngine &m_graphics;
-
         public:
             struct graphicData
                 {
@@ -21,7 +19,7 @@ class graphicsSystem
                     material material;
                 };
 
-            graphicsSystem(graphicsEngine &graphics);
+            graphicsSystem();
 
             graphicsComponent &createComponent(graphicData data);
 

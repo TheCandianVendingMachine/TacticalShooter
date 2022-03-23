@@ -3,22 +3,7 @@
 #include <glad/glad.h>
 #include <utility>
 
-texture::texture(const char *file, bool useSRGB)
-    {
-        loadFromFile(file, useSRGB);
-    }
-
-texture::texture(const texture &rhs)
-    {
-        *this = rhs;
-    }
-
-texture::texture(texture &&rhs)
-    {
-        *this = std::move(rhs);
-    }
-
-void texture::loadFromFile(const char *file, bool useSRGB)
+void texture::loadFromMemoryInternal(unsigned char *pixels, bool useSRGB)
     {
         glGenTextures(1, &m_id);
         glBindTexture(GL_TEXTURE_2D, m_id);
@@ -28,9 +13,6 @@ void texture::loadFromFile(const char *file, bool useSRGB)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        stbi_set_flip_vertically_on_load(true);
-
-        unsigned char *pixels = stbi_load(file, &m_width, &m_height, &m_channels, 0);
         if (pixels) 
             {
                 constexpr GLint possibleFormats[] = {
@@ -57,8 +39,36 @@ void texture::loadFromFile(const char *file, bool useSRGB)
                 glTexImage2D(GL_TEXTURE_2D, 0, sourceFormat, width, height, 0, destFormat, GL_UNSIGNED_BYTE, pixels);
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
+    }
 
+texture::texture(const char *file, bool useSRGB)
+    {
+        loadFromFile(file, useSRGB);
+    }
+
+texture::texture(const texture &rhs)
+    {
+        *this = rhs;
+    }
+
+texture::texture(texture &&rhs)
+    {
+        *this = std::move(rhs);
+    }
+
+void texture::loadFromFile(const char *file, bool useSRGB)
+    {
+        stbi_set_flip_vertically_on_load(true);
+        unsigned char *pixels = stbi_load(file, &m_width, &m_height, &m_channels, 0);
+        loadFromMemoryInternal(pixels, useSRGB);
         stbi_image_free(pixels);
+    }
+
+void texture::loadFromMemory(unsigned char *pixels, std::size_t length, bool useSRGB)
+    {
+        unsigned char *memoryPixels = stbi_load_from_memory(pixels, length, &m_width, &m_height, &m_channels, 0);
+        loadFromMemoryInternal(memoryPixels, useSRGB);
+        stbi_image_free(memoryPixels);
     }
 
 void texture::bind(int textureUnit) const

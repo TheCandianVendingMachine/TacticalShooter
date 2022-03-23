@@ -1,6 +1,7 @@
 // texture.hpp
 // a texture loaded into memory
 #pragma once
+#include <cstddef>
 
 class texture
     {
@@ -9,6 +10,8 @@ class texture
             int m_height = 0;
             int m_channels = 0;
             unsigned int m_id = 0;
+
+            void loadFromMemoryInternal(unsigned char *pixels, bool useSRGB);
 
         public:
             enum class type
@@ -33,6 +36,7 @@ class texture
             texture(texture &&rhs);
             
             void loadFromFile(const char *file, bool useSRGB);
+            void loadFromMemory(unsigned char *pixels, std::size_t length, bool useSRGB);
 
             void bind(int textureUnit) const;
 

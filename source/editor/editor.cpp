@@ -4,6 +4,7 @@
 #include "graphics/window.hpp"
 #include "graphics/graphicsEngine.hpp"
 #include "graphics/vertex.hpp"
+#include "resources/textureManager.hpp"
 #include "glad/glad.h"
 #include <vector>
 #include <GLFW/glfw3.h>
@@ -88,7 +89,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
                 m_3dEngine.draw(m_rightCamera, m_rightFramebuffer, graphicsEngine::drawFlags::EDITOR_ORTHO_PIPELINE);
                 m_3dEngine.draw(m_frontCamera, m_frontFramebuffer, graphicsEngine::drawFlags::EDITOR_ORTHO_PIPELINE);
 
-                ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                ImGui::Begin("#editor 3d", &enabled, c_editorViewportWindowFlags);
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
@@ -108,7 +109,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
                 ImGui::End();
 
-                ImGui::Begin("#editor top", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                ImGui::Begin("#editor top", &enabled, c_editorViewportWindowFlags);
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x + extent.x, topLeft.y });
 
@@ -127,7 +128,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
                 ImGui::End();
 
-                ImGui::Begin("#editor right", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                ImGui::Begin("#editor right", &enabled, c_editorViewportWindowFlags);
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x, topLeft.y + extent.y });
 
@@ -146,7 +147,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
                 ImGui::End();
 
-                ImGui::Begin("#editor front", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                ImGui::Begin("#editor front", &enabled, c_editorViewportWindowFlags);
                 ImGui::SetWindowSize({ extent.x, extent.y });
                 ImGui::SetWindowPos({ topLeft.x + extent.x, topLeft.y + extent.y });
 
@@ -167,7 +168,7 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
             }
         else
             {
-                ImGui::Begin("#editor 3d", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+                ImGui::Begin("#editor 3d", &enabled, c_editorViewportWindowFlags);
                 ImGui::SetWindowSize({ extent.x * 2.f, extent.y * 2.f });
                 ImGui::SetWindowPos({ topLeft.x, topLeft.y });
 
@@ -187,6 +188,31 @@ void editor::drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight)
 
                 ImGui::End();
             }
+    }
+
+void editor::drawTextureManager()
+    {
+        if (ImGui::Begin("TextureManager", &m_showingTextureManager))
+            {
+                if (m_selectedTexture == "" && m_textureManager.nameUIDMap.size() > 0)
+                    {
+                        m_selectedTexture = m_textureManager.nameUIDMap.begin()->first;
+                    }
+
+                if (ImGui::BeginCombo("Texture", m_selectedTexture.c_str()))
+                    {
+                        for (auto &textureName : m_textureManager.nameUIDMap)
+                            {
+                                bool isSelected = m_selectedTexture == textureName.first;
+                                if (ImGui::Selectable(textureName.first.c_str(), &isSelected))
+                                    {
+                                        m_selectedTexture = textureName.first;
+                                    }
+                            }
+                        ImGui::EndCombo();
+                    }
+            }
+        ImGui::End();
     }
 
 void editor::generateFramebuffers(glm::vec2 extent)
@@ -237,9 +263,11 @@ void editor::generateFramebuffers(glm::vec2 extent)
             }
     }
 
-editor::editor(window &window, graphicsEngine &engine3d) : 
+editor::editor(window &window, graphicsEngine &engine3d, textureManager &textureManager) :
+    c_editorViewportWindowFlags(ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus),
     m_window(window),
-    m_3dEngine(engine3d)
+    m_3dEngine(engine3d),
+    m_textureManager(textureManager)
     {
         initKeybinds();
 
@@ -381,6 +409,7 @@ void editor::draw()
 
         if (ImGui::BeginMenu("File"))
             {
+                ImGui::MenuItem("Texture Manager", NULL, &m_showingTextureManager);
                 ImGui::EndMenu();
             }
 
@@ -399,7 +428,7 @@ void editor::draw()
 
         const ImVec2 totalSize = { static_cast<float>(m_window.width), static_cast<float>(m_window.height) - barSize.y };
 
-        ImGui::Begin("#editor left panel", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+        ImGui::Begin("#editor left panel", &enabled, c_editorViewportWindowFlags);
         ImGui::SetWindowSize({ totalSize.x * m_leftPanelSize.x, totalSize.y - (totalSize.y * m_topPanelSize.y) - (totalSize.y * m_bottomPanelSize.y) });
         ImGui::SetWindowPos({ 0.f, barSize.y + totalSize.y * m_topPanelSize.y });
 
@@ -407,7 +436,7 @@ void editor::draw()
 
         ImGui::End();
 
-        ImGui::Begin("#editor right panel", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+        ImGui::Begin("#editor right panel", &enabled, c_editorViewportWindowFlags);
         ImGui::SetWindowSize({ totalSize.x * m_rightPanelSize.x, totalSize.y - (totalSize.y * m_topPanelSize.y) - (totalSize.y * m_bottomPanelSize.y) });
         ImGui::SetWindowPos({ totalSize.x - totalSize.x * m_rightPanelSize.x, barSize.y + totalSize.y * m_topPanelSize.y });
 
@@ -415,7 +444,7 @@ void editor::draw()
 
         ImGui::End();
 
-        ImGui::Begin("#editor top panel", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+        ImGui::Begin("#editor top panel", &enabled, c_editorViewportWindowFlags);
         ImGui::SetWindowSize({ totalSize.x * m_topPanelSize.x, totalSize.y * m_topPanelSize.y });
         ImGui::SetWindowPos({ 0, barSize.y });
 
@@ -423,7 +452,7 @@ void editor::draw()
 
         ImGui::End();
 
-        ImGui::Begin("#editor bottom panel", &enabled, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+        ImGui::Begin("#editor bottom panel", &enabled, c_editorViewportWindowFlags);
         ImGui::SetWindowSize({ totalSize.x * m_bottomPanelSize.x, totalSize.y * m_bottomPanelSize.y });
         ImGui::SetWindowPos({ 0, barSize.y + totalSize.y - totalSize.y * m_bottomPanelSize.y });
 
@@ -433,6 +462,11 @@ void editor::draw()
 
         m_3dEngine.draw(m_camera3d, m_3dFramebuffer);
         drawEditorViewports({ totalSize.x * m_leftPanelSize.x, barSize.y + totalSize.y * m_topPanelSize.y }, { totalSize.x - totalSize.x * m_rightPanelSize.x, barSize.y + totalSize.y - totalSize.y * m_bottomPanelSize.y });
+
+        if (m_showingTextureManager) 
+            {
+                drawTextureManager();
+            }
     }
 
 editor::mode operator|(const editor::mode &lhs, const editor::mode &rhs)

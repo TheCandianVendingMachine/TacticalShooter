@@ -1,7 +1,6 @@
 #include "graphicsSystem.hpp"
 
-graphicsSystem::graphicsSystem(graphicsEngine &graphics) :
-    m_graphics(graphics)
+graphicsSystem::graphicsSystem()
     {
     }
 

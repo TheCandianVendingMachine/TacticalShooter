@@ -64,6 +64,10 @@
 #include <steam/steamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 
+
+
+#include "resources/textureManager.hpp"
+
 int main()
     {
         spdlog::set_level(spdlog::level::debug);
@@ -96,6 +100,13 @@ int main()
         window app(1280, 720, "Tactical Shooter Prototype");
         glfwSetInputMode(app.getWindow(), GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
+        textureManager textureManager;
+        textureManager.loadFromMetaImage("rustediron2_ao.metaImage");
+        textureManager.loadFromMetaImage("rustediron2_basecolor.metaImage");
+        textureManager.loadFromMetaImage("rustediron2_metallic.metaImage");
+        textureManager.loadFromMetaImage("rustediron2_normal.metaImage");
+        textureManager.loadFromMetaImage("rustediron2_roughness.metaImage");
+
         // generate all primitives onto stack. Needs to be called after OpenGL initialisation
         primitive::plane c_plane;
         primitive::sphere c_sphere;
@@ -104,7 +115,7 @@ int main()
         graphicsEngine graphicsEngine(app);
 
         physicsSystem ecsPhysics(physics);
-        graphicsSystem ecsGraphics(graphicsEngine);
+        graphicsSystem ecsGraphics;
 
         inputHandler c_inputHandler(app.getWindow(), "inputs.ini");
         globals::g_inputs = &c_inputHandler;
@@ -117,22 +128,16 @@ int main()
         c_inputHandler.addDefaultKey("debug", "close", GLFW_KEY_ESCAPE);
         c_inputHandler.addDefaultKey("debug", "toggleCursor", GLFW_KEY_F1);
 
-        editor editor(app, graphicsEngine);
+        editor editor(app, graphicsEngine, textureManager);
 
         c_inputHandler.save("inputs.ini");
 
-        texture albedo("rustediron2_basecolor.png", true);
-        texture metallic("rustediron2_metallic.png", false);
-        texture normal("rustediron2_normal.png", true);
-        texture roughness("rustediron2_roughness.png", false);
-        texture ao("rustediron2_ao.png", false);
-
         material temp = {
-            .albedoMap = albedo,
-            .normalMap = normal,
-            .metallicMap = metallic,
-            .roughnessMap = roughness,
-            .ambientOcclusionMap = ao
+            .albedoMap = textureManager.get("iron_base"),
+            .normalMap = textureManager.get("iron_normal"),
+            .metallicMap = textureManager.get("iron_metallic"),
+            .roughnessMap = textureManager.get("iron_roughness"),
+            .ambientOcclusionMap = textureManager.get("iron_ao")
         };
 
         entity ecsSphere;

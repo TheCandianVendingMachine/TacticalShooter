@@ -2,6 +2,7 @@
 // entry point for all editor related code
 #pragma once
 #include <glm/vec2.hpp>
+#include <string>
 #include "graphics/camera.hpp"
 #include "graphics/vertexArray.hpp"
 #include "graphics/shader.hpp"
@@ -10,6 +11,7 @@
 
 class window;
 class graphicsEngine;
+class textureManager;
 class editor
     {
         private:
@@ -51,6 +53,8 @@ class editor
             orthographicCamera m_frontCamera;
             panCameraController m_orthographicController;
 
+            const int c_editorViewportWindowFlags = 0;
+
             static constexpr float m_minExtent = 1.f / 64.f;
             static constexpr float m_maxExtent = 1.f / 4.f;
 
@@ -72,8 +76,12 @@ class editor
             unsigned int m_frontFramebuffer = 0;
             unsigned int m_frontFramebufferColour = 0;
 
+            bool m_showingTextureManager = false;
+            std::string m_selectedTexture;
+
             window &m_window;
             graphicsEngine &m_3dEngine;
+            textureManager &m_textureManager;
 
             void initKeybinds();
 
@@ -85,12 +93,14 @@ class editor
             void drawViewportFramebuffer(glm::vec2 extent, unsigned int texture);
             void drawEditorViewports(glm::vec2 topLeft, glm::vec2 bottomRight);
 
+            void drawTextureManager();
+
             void generateFramebuffers(glm::vec2 extent);
 
         public:
             bool enabled = true;
 
-            editor(window &window, graphicsEngine &engine3d);
+            editor(window &window, graphicsEngine &engine3d, textureManager &textureManager);
             ~editor();
 
             void update();
